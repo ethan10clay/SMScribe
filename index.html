@@ -3,9 +3,675 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>SMScribe — Lecture Transcription over SMS</title>
+    <meta
+      name="description"
+      content="Text us your lecture audio. Get a full transcript back. No apps, no accounts — just SMS."
+    />
+    <link rel="stylesheet" href="smscribe.css" />
+    <style>
+      /* ── Index-only additions not in smscribe.css ── */
+
+      /* Phone input widget */
+      .hero-phone-input {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: var(--space-2) var(--space-2) var(--space-2) var(--space-5);
+        box-shadow: var(--shadow-lg);
+        max-width: 420px;
+        margin: 0 auto var(--space-4);
+      }
+      .hero-phone-input input {
+        flex: 1;
+        border: none;
+        outline: none;
+        font-size: var(--text-base);
+        color: var(--text-primary);
+        background: transparent;
+        min-width: 0;
+        font-family: var(--font-sans);
+      }
+      .hero-phone-input input::placeholder {
+        color: var(--text-muted);
+      }
+      .hero-disclaimer {
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        text-align: center;
+      }
+
+      /* How it works */
+      .hiw-inner {
+        max-width: 900px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-16);
+        align-items: center;
+      }
+      .hiw-points {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-6);
+        margin-top: var(--space-8);
+      }
+      .hiw-point {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+        padding-left: var(--space-4);
+        border-left: 2px solid var(--blue-100);
+      }
+      .hiw-point-title {
+        font-size: var(--text-sm);
+        font-weight: var(--weight-semibold);
+        color: var(--text-primary);
+      }
+      .hiw-point-body {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        line-height: var(--leading-relaxed);
+      }
+
+      /* SMS mockup frame */
+      .sms-frame {
+        background: var(--gray-50);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: var(--space-6);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+      }
+      .sms-frame-header {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        padding-bottom: var(--space-4);
+        border-bottom: 1px solid var(--border);
+        margin-bottom: var(--space-1);
+      }
+      .sms-avatar {
+        width: 32px;
+        height: 32px;
+        background: var(--blue-500);
+        border-radius: var(--radius-full);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: var(--text-xs);
+        font-weight: var(--weight-bold);
+        color: var(--white);
+        flex-shrink: 0;
+      }
+      .sms-contact {
+        font-size: var(--text-sm);
+        font-weight: var(--weight-semibold);
+        color: var(--text-primary);
+      }
+      .sms-status {
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+      }
+      .sms-time {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-align: center;
+        margin: var(--space-1) 0;
+      }
+      .sms-row {
+        display: flex;
+      }
+      .sms-row.out {
+        justify-content: flex-end;
+      }
+      .sms-bubble {
+        max-width: 78%;
+        padding: var(--space-3) var(--space-4);
+        border-radius: var(--radius-lg);
+        font-size: var(--text-sm);
+        line-height: var(--leading-relaxed);
+      }
+      .sms-bubble.in {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-bottom-left-radius: 3px;
+        color: var(--text-primary);
+      }
+      .sms-bubble.in em {
+        font-style: italic;
+        opacity: 0.85;
+      }
+
+      /* iOS audio bubble */
+      .audio-bubble {
+        background: var(--blue-500);
+        border-radius: var(--radius-lg);
+        border-bottom-right-radius: 3px;
+        padding: var(--space-3) var(--space-3);
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        max-width: 220px;
+      }
+      .audio-play {
+        width: 28px;
+        height: 28px;
+        border-radius: var(--radius-full);
+        background: rgba(255, 255, 255, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .audio-play svg {
+        margin-left: 2px;
+      }
+      .audio-waveform {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        height: 22px;
+      }
+      .aw {
+        width: 2.5px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.45);
+      }
+      .aw.hi {
+        background: rgba(255, 255, 255, 0.9);
+      }
+      .audio-duration {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.75);
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      /* Pricing */
+      .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-5);
+        max-width: 860px;
+        margin: 0 auto;
+      }
+      .pricing-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: var(--space-8);
+        position: relative;
+        transition:
+          box-shadow var(--dur-base) var(--ease),
+          border-color var(--dur-base) var(--ease);
+      }
+      .pricing-card:hover {
+        box-shadow: var(--shadow-lg);
+        border-color: var(--gray-300);
+      }
+      .pricing-card.featured {
+        border: 2px solid var(--blue-400);
+        box-shadow: var(--shadow-blue);
+      }
+      .pricing-card.featured:hover {
+        box-shadow: 0 8px 28px rgba(59, 130, 246, 0.28);
+      }
+      .pricing-badge {
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--blue-500);
+        color: var(--white);
+        font-size: var(--text-xs);
+        font-weight: var(--weight-semibold);
+        padding: 0.2rem 0.875rem;
+        border-radius: var(--radius-full);
+        white-space: nowrap;
+      }
+      .pricing-tier {
+        font-size: var(--text-xs);
+        font-weight: var(--weight-semibold);
+        letter-spacing: var(--tracking-widest);
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: var(--space-4);
+      }
+      .pricing-price {
+        display: flex;
+        align-items: baseline;
+        gap: var(--space-1);
+        margin-bottom: var(--space-2);
+      }
+      .pricing-amount {
+        font-family: var(--font-display);
+        font-size: var(--text-5xl);
+        font-weight: var(--weight-bold);
+        color: var(--blue-900);
+        letter-spacing: var(--tracking-tight);
+        line-height: 1;
+      }
+      .pricing-period {
+        font-size: var(--text-sm);
+        color: var(--text-muted);
+      }
+      .pricing-desc {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        line-height: var(--leading-relaxed);
+        margin-bottom: var(--space-6);
+        min-height: 40px;
+      }
+      .pricing-divider {
+        border: none;
+        border-top: 1px solid var(--gray-100);
+        margin: var(--space-5) 0;
+      }
+      .pricing-features {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        margin-bottom: var(--space-8);
+      }
+      .pricing-features li {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        padding-left: 1.1rem;
+        position: relative;
+        line-height: var(--leading-snug);
+      }
+      .pricing-features li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: var(--blue-500);
+        font-weight: var(--weight-semibold);
+        font-size: 11px;
+        top: 1px;
+      }
+      .pricing-features li.off {
+        color: var(--gray-300);
+      }
+      .pricing-features li.off::before {
+        content: "–";
+        color: var(--gray-300);
+      }
+      .btn-full {
+        width: 100%;
+        justify-content: center;
+      }
+
+      /* CTA banner */
+      .cta-banner {
+        background: linear-gradient(
+          140deg,
+          var(--blue-900) 0%,
+          var(--blue-700) 100%
+        );
+        padding: var(--space-20) var(--space-8);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .cta-banner::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at 70% 50%,
+          rgba(255, 255, 255, 0.04) 0%,
+          transparent 60%
+        );
+        pointer-events: none;
+      }
+      .cta-banner h2 {
+        font-family: var(--font-display);
+        font-size: clamp(var(--text-2xl), 3.5vw, var(--text-4xl));
+        font-weight: var(--weight-bold);
+        color: var(--white);
+        letter-spacing: var(--tracking-tight);
+        margin-bottom: var(--space-3);
+        position: relative;
+      }
+      .cta-banner p {
+        font-size: var(--text-lg);
+        color: var(--blue-200);
+        margin-bottom: var(--space-8);
+        position: relative;
+      }
+      .cta-phone-input {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--radius-lg);
+        padding: var(--space-2) var(--space-2) var(--space-2) var(--space-5);
+        max-width: 380px;
+        margin: 0 auto var(--space-3);
+        position: relative;
+      }
+      .cta-phone-input input {
+        flex: 1;
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: var(--text-base);
+        color: var(--white);
+        min-width: 0;
+        font-family: var(--font-sans);
+      }
+      .cta-phone-input input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+      .cta-disclaimer {
+        font-size: var(--text-xs);
+        color: rgba(255, 255, 255, 0.35);
+        position: relative;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .hiw-inner {
+          grid-template-columns: 1fr;
+          gap: var(--space-10);
+        }
+        .pricing-grid {
+          grid-template-columns: 1fr;
+          max-width: 400px;
+        }
+        .pricing-card.featured {
+          order: -1;
+        }
+        .cta-banner {
+          padding: var(--space-16) var(--space-5);
+        }
+        .cta-phone-input {
+          max-width: 100%;
+        }
+      }
+      @media (max-width: 480px) {
+        .hero-phone-input {
+          max-width: 100%;
+        }
+      }
+    </style>
   </head>
   <body>
-    smscribe index test
+    <!-- Nav -->
+    <nav class="nav">
+      <div class="nav-inner">
+        <a href="/" class="nav-logo">SMS<span>cribe</span></a>
+        <ul class="nav-links">
+          <li><a href="#how-it-works">How it works</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="/privacy-policy">Privacy</a></li>
+        </ul>
+        <div class="nav-cta">
+          <a href="#" class="btn btn-ghost btn-sm">Log in</a>
+          <a href="#pricing" class="btn btn-primary btn-sm">Get started</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+      <span class="hero-eyebrow"><span class="dot"></span> Now in beta</span>
+      <h1>Your lecture,<br /><em>as a text message.</em></h1>
+      <p class="hero-sub">
+        Send us an audio file. Get a full, clean transcript delivered straight
+        to your phone. No app, no login — just SMS.
+      </p>
+      <div class="hero-phone-input">
+        <input type="tel" placeholder="+1 (555) 000-0000" />
+        <a href="#" class="btn btn-primary">Start free</a>
+      </div>
+      <p class="hero-disclaimer">
+        No credit card required &nbsp;&middot;&nbsp; Reply STOP anytime
+      </p>
+      <div class="wave-bar-group">
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="section" id="how-it-works">
+      <div class="hiw-inner">
+        <div>
+          <p class="section-label">How it works</p>
+          <h2 class="section-heading">Your whole workflow,<br />over text.</h2>
+          <p class="section-sub">
+            SMScribe lives entirely in your messages app. Send audio, get
+            transcripts, manage your account — no apps, no logins, no friction.
+          </p>
+          <div class="hiw-points">
+            <div class="hiw-point">
+              <p class="hiw-point-title">Send your recording</p>
+              <p class="hiw-point-body">
+                Open your messages app and send us any audio file — straight
+                from your voice memos, Zoom, or anywhere it's saved.
+              </p>
+            </div>
+            <div class="hiw-point">
+              <p class="hiw-point-title">We transcribe it fast</p>
+              <p class="hiw-point-body">
+                Most lectures come back in under a minute, clean and formatted.
+              </p>
+            </div>
+            <div class="hiw-point">
+              <p class="hiw-point-title">It lands in your thread</p>
+              <p class="hiw-point-body">
+                The transcript arrives as a reply. Save it, share it, search it
+                — it's just a text message.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="sms-frame">
+          <div class="sms-frame-header">
+            <div class="sms-avatar">S</div>
+            <div>
+              <p class="sms-contact">SMScribe</p>
+              <p class="sms-status">SMS · (555) 010-2030</p>
+            </div>
+          </div>
+          <p class="sms-time">Today 10:41 AM</p>
+          <div class="sms-row out">
+            <div class="audio-bubble">
+              <div class="audio-play">
+                <svg width="10" height="12" viewBox="0 0 10 12" fill="white">
+                  <path d="M0 0L10 6L0 12V0Z" />
+                </svg>
+              </div>
+              <div class="audio-waveform">
+                <div class="aw" style="height: 5px"></div>
+                <div class="aw hi" style="height: 14px"></div>
+                <div class="aw" style="height: 8px"></div>
+                <div class="aw hi" style="height: 18px"></div>
+                <div class="aw" style="height: 10px"></div>
+                <div class="aw hi" style="height: 16px"></div>
+                <div class="aw" style="height: 6px"></div>
+                <div class="aw hi" style="height: 20px"></div>
+                <div class="aw" style="height: 9px"></div>
+                <div class="aw hi" style="height: 13px"></div>
+                <div class="aw" style="height: 7px"></div>
+                <div class="aw hi" style="height: 17px"></div>
+                <div class="aw" style="height: 5px"></div>
+                <div class="aw" style="height: 10px"></div>
+                <div class="aw hi" style="height: 15px"></div>
+                <div class="aw" style="height: 8px"></div>
+              </div>
+              <span class="audio-duration">54:12</span>
+            </div>
+          </div>
+          <div class="sms-row">
+            <div class="sms-bubble in">Got it — transcribing now ⚡</div>
+          </div>
+          <p class="sms-time">10:42 AM</p>
+          <div class="sms-row">
+            <div class="sms-bubble in">
+              Done! (54 min · 8,200 words)<br /><br /><em
+                >"Today we're covering monetary policy and the Fed's dual
+                mandate. The first thing to understand..."</em
+              ><br /><br />Full transcript → smscribe.com/t/x9k2m
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="section section-gray" id="pricing">
+      <div class="container">
+        <div class="text-center mb-8">
+          <p class="section-label">Pricing</p>
+          <h2 class="section-heading">Start free, scale when you need to.</h2>
+        </div>
+        <div class="pricing-grid">
+          <!-- Free -->
+          <div class="pricing-card">
+            <p class="pricing-tier">Free</p>
+            <div class="pricing-price">
+              <span class="pricing-amount">$0</span>
+              <span class="pricing-period">/ mo</span>
+            </div>
+            <p class="pricing-desc">Try it out. No card needed.</p>
+            <hr class="pricing-divider" />
+            <ul class="pricing-features">
+              <li>3 transcriptions / month</li>
+              <li>Up to 30 min per file</li>
+              <li>SMS delivery</li>
+              <li class="off">Transcription archive</li>
+              <li class="off">Priority processing</li>
+              <li class="off">SMS account management</li>
+            </ul>
+            <a href="#" class="btn btn-secondary btn-full">Get started free</a>
+          </div>
+
+          <!-- Student -->
+          <div class="pricing-card featured">
+            <span class="pricing-badge">Most popular</span>
+            <p class="pricing-tier">Student</p>
+            <div class="pricing-price">
+              <span class="pricing-amount">$6</span>
+              <span class="pricing-period">/ mo</span>
+            </div>
+            <p class="pricing-desc">Built for a full semester of lectures.</p>
+            <hr class="pricing-divider" />
+            <ul class="pricing-features">
+              <li>30 transcriptions / month</li>
+              <li>Up to 3 hrs per file</li>
+              <li>SMS delivery</li>
+              <li>Transcription archive</li>
+              <li>Priority processing</li>
+              <li class="off">SMS account management</li>
+            </ul>
+            <a href="#" class="btn btn-primary btn-full">Start Student plan</a>
+          </div>
+
+          <!-- Pro -->
+          <div class="pricing-card">
+            <p class="pricing-tier">Pro</p>
+            <div class="pricing-price">
+              <span class="pricing-amount">$14</span>
+              <span class="pricing-period">/ mo</span>
+            </div>
+            <p class="pricing-desc">Unlimited, for power users.</p>
+            <hr class="pricing-divider" />
+            <ul class="pricing-features">
+              <li>Unlimited transcriptions</li>
+              <li>Up to 6 hrs per file</li>
+              <li>SMS delivery</li>
+              <li>Transcription archive</li>
+              <li>Priority processing</li>
+              <li>SMS account management</li>
+            </ul>
+            <a href="#" class="btn btn-secondary btn-full">Start Pro plan</a>
+          </div>
+        </div>
+        <p
+          class="text-center mt-8"
+          style="font-size: var(--text-xs); color: var(--text-muted)"
+        >
+          Annual billing available at checkout &nbsp;&middot;&nbsp; Cancel
+          anytime &nbsp;&middot;&nbsp; No refunds on used periods
+        </p>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-banner">
+      <h2>Ready to stop rewatching lectures?</h2>
+      <p>Enter your number and send your first recording in under a minute.</p>
+      <div class="cta-phone-input">
+        <input type="tel" placeholder="+1 (555) 000-0000" />
+        <a href="#" class="btn btn-primary">Start free</a>
+      </div>
+      <p class="cta-disclaimer">
+        Message &amp; data rates may apply &nbsp;&middot;&nbsp; Reply STOP to
+        unsubscribe
+      </p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="logo">SMS<span>cribe</span></a>
+          <p>
+            Lecture transcription over SMS. No apps, no hassle — just text us
+            your audio.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="#how-it-works">How it works</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="#">Sign up</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy-policy">Privacy Policy</a></li>
+            <li><a href="/terms">Terms &amp; Conditions</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Support</h4>
+          <ul>
+            <li>
+              <a href="mailto:support@smscribe.com">support@smscribe.com</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-copy">&copy; 2025 SMScribe. All rights reserved.</p>
+        <ul class="footer-legal">
+          <li><a href="/privacy-policy">Privacy</a></li>
+          <li><a href="/terms">Terms</a></li>
+        </ul>
+      </div>
+    </footer>
   </body>
 </html>
