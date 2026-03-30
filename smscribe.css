@@ -1,9 +1,3 @@
-/* ============================================================
-   SMScribe — Site-Wide Theme
-   smscribe.css  |  v1.0
-   Import this file on every page.
-   ============================================================ */
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Bricolage+Grotesque:wght@400;500;600;700&display=swap');
 
 /* ─────────────────────────────────────────
@@ -627,7 +621,6 @@ a { color: inherit; }
 
 /* ─────────────────────────────────────────
    11. LEGAL PAGE STYLES
-   (used on /privacy-policy and /terms)
    ───────────────────────────────────────── */
 .legal-hero {
   background: linear-gradient(160deg, var(--blue-50) 0%, var(--white) 70%);
