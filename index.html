@@ -12,7 +12,6 @@
     <style>
       /* ── Index-only additions not in smscribe.css ── */
 
-      /* Phone input widget */
       .hero-phone-input {
         display: flex;
         align-items: center;
@@ -44,7 +43,6 @@
         text-align: center;
       }
 
-      /* How it works */
       .hiw-inner {
         max-width: 900px;
         margin: 0 auto;
@@ -77,7 +75,6 @@
         line-height: var(--leading-relaxed);
       }
 
-      /* SMS mockup frame */
       .sms-frame {
         background: var(--gray-50);
         border: 1px solid var(--border);
@@ -147,12 +144,11 @@
         opacity: 0.85;
       }
 
-      /* iOS audio bubble */
       .audio-bubble {
         background: var(--blue-500);
         border-radius: var(--radius-lg);
         border-bottom-right-radius: 3px;
-        padding: var(--space-3) var(--space-3);
+        padding: var(--space-3);
         display: flex;
         align-items: center;
         gap: var(--space-3);
@@ -193,7 +189,6 @@
         flex-shrink: 0;
       }
 
-      /* Pricing */
       .pricing-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -308,7 +303,6 @@
         justify-content: center;
       }
 
-      /* CTA banner */
       .cta-banner {
         background: linear-gradient(
           140deg,
@@ -377,6 +371,290 @@
         position: relative;
       }
 
+      /* ── Signup Modal ── */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+      .modal-overlay.open {
+        display: flex;
+      }
+
+      .modal {
+        background: var(--white);
+        border-radius: var(--radius-xl);
+        padding: 2.5rem;
+        width: 100%;
+        max-width: 440px;
+        position: relative;
+        box-shadow: var(--shadow-xl);
+      }
+      .modal-close {
+        position: absolute;
+        top: 1.25rem;
+        right: 1.25rem;
+        width: 28px;
+        height: 28px;
+        border-radius: var(--radius-full);
+        background: var(--gray-100);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gray-500);
+        font-size: 15px;
+        line-height: 1;
+        transition: background var(--dur-fast);
+      }
+      .modal-close:hover {
+        background: var(--gray-200);
+      }
+
+      .modal-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: var(--weight-semibold);
+        letter-spacing: var(--tracking-widest);
+        text-transform: uppercase;
+        color: var(--blue-600);
+        background: var(--blue-50);
+        border: 1px solid var(--blue-200);
+        border-radius: var(--radius-full);
+        padding: 0.25rem 0.75rem;
+        margin-bottom: 1.25rem;
+      }
+      .modal-dot {
+        width: 5px;
+        height: 5px;
+        background: var(--blue-500);
+        border-radius: 50%;
+      }
+      .modal h2 {
+        font-family: var(--font-display);
+        font-size: 1.625rem;
+        font-weight: var(--weight-bold);
+        color: var(--blue-900);
+        letter-spacing: var(--tracking-snug);
+        line-height: 1.15;
+        margin-bottom: 0.5rem;
+      }
+      .modal-sub {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        line-height: var(--leading-relaxed);
+        margin-bottom: 2rem;
+      }
+
+      .modal-steps {
+        display: flex;
+        margin-bottom: 1.75rem;
+        border-bottom: 1px solid var(--gray-100);
+      }
+      .modal-step-tab {
+        flex: 1;
+        text-align: center;
+        font-size: 12px;
+        font-weight: var(--weight-semibold);
+        color: var(--text-muted);
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid transparent;
+      }
+      .modal-step-tab.active {
+        color: var(--blue-600);
+        border-bottom-color: var(--blue-500);
+      }
+      .modal-step-tab.done {
+        color: var(--blue-300);
+      }
+
+      .modal-form-group {
+        margin-bottom: 1.25rem;
+      }
+      .modal-label {
+        display: block;
+        font-size: var(--text-sm);
+        font-weight: var(--weight-medium);
+        color: var(--gray-700);
+        margin-bottom: 0.5rem;
+      }
+      .modal-input {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 0.625rem 0.875rem;
+        font-size: 15px;
+        color: var(--text-primary);
+        font-family: var(--font-sans);
+        outline: none;
+        transition:
+          border-color var(--dur-base),
+          box-shadow var(--dur-base);
+      }
+      .modal-input:focus {
+        border-color: var(--blue-400);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+      .modal-input::placeholder {
+        color: var(--text-muted);
+      }
+
+      .phone-row {
+        display: flex;
+        gap: 0.5rem;
+      }
+      .country-code {
+        width: 72px;
+        flex-shrink: 0;
+        background: var(--gray-50);
+        color: var(--gray-500);
+      }
+
+      .consent-box {
+        background: var(--blue-50);
+        border: 1px solid var(--blue-100);
+        border-radius: var(--radius-md);
+        padding: var(--space-4) var(--space-5);
+        margin-bottom: 1.5rem;
+      }
+      .consent-check {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+      }
+      .consent-check input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        margin-top: 2px;
+        flex-shrink: 0;
+        accent-color: var(--blue-500);
+        cursor: pointer;
+      }
+      .consent-text {
+        font-size: 12px;
+        color: var(--gray-600);
+        line-height: 1.65;
+      }
+      .consent-text strong {
+        color: var(--gray-800);
+        font-weight: var(--weight-semibold);
+      }
+
+      .modal-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        font-size: var(--text-sm);
+        font-weight: var(--weight-medium);
+        padding: 0.7rem 1.25rem;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-family: var(--font-sans);
+        transition: all var(--dur-base);
+        border: 1px solid transparent;
+      }
+      .modal-btn-primary {
+        background: var(--blue-500);
+        color: var(--white);
+        border-color: var(--blue-500);
+      }
+      .modal-btn-primary:hover {
+        background: var(--blue-600);
+      }
+      .modal-btn-primary:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .modal-btn-ghost {
+        background: transparent;
+        color: var(--text-muted);
+        border-color: var(--border);
+        margin-top: 0.75rem;
+      }
+      .modal-btn-ghost:hover {
+        background: var(--gray-50);
+      }
+
+      .modal-hint {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-align: center;
+        margin-top: 0.875rem;
+        line-height: 1.5;
+      }
+      .modal-hint a {
+        color: var(--blue-500);
+        text-decoration: none;
+      }
+
+      .modal-back {
+        background: none;
+        border: none;
+        font-size: 11px;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-family: var(--font-sans);
+        display: block;
+        margin: 0.75rem auto 0;
+      }
+      .modal-back:hover {
+        color: var(--text-secondary);
+      }
+
+      .modal-success {
+        text-align: center;
+        padding: 0.5rem 0;
+      }
+      .success-icon {
+        width: 56px;
+        height: 56px;
+        background: var(--blue-50);
+        border: 2px solid var(--blue-200);
+        border-radius: var(--radius-full);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.25rem;
+        font-size: 22px;
+      }
+      .modal-success h3 {
+        font-family: var(--font-display);
+        font-size: 1.375rem;
+        font-weight: var(--weight-bold);
+        color: var(--blue-900);
+        margin-bottom: 0.5rem;
+      }
+      .modal-success p {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        line-height: var(--leading-relaxed);
+        max-width: 300px;
+        margin: 0 auto 0.75rem;
+      }
+      .success-number {
+        display: inline-block;
+        font-size: var(--text-lg);
+        font-weight: var(--weight-semibold);
+        color: var(--blue-600);
+        background: var(--blue-50);
+        border: 1px solid var(--blue-200);
+        border-radius: var(--radius-md);
+        padding: 0.5rem 1.25rem;
+        margin-bottom: 1.25rem;
+        font-family: monospace;
+      }
+
       /* Responsive */
       @media (max-width: 768px) {
         .hiw-inner {
@@ -401,6 +679,9 @@
         .hero-phone-input {
           max-width: 100%;
         }
+        .modal {
+          padding: 1.75rem;
+        }
       }
     </style>
   </head>
@@ -415,7 +696,9 @@
           <li><a href="/privacy-policy">Privacy</a></li>
         </ul>
         <div class="nav-cta">
-          <a href="#" class="btn btn-ghost btn-sm">Log in</a>
+          <a href="#" class="btn btn-ghost btn-sm" onclick="openModal(event)"
+            >Log in</a
+          >
           <a href="#pricing" class="btn btn-primary btn-sm">Get started</a>
         </div>
       </div>
@@ -429,8 +712,10 @@
         to your phone. No app, no login, just SMS.
       </p>
       <div class="hero-phone-input">
-        <input type="tel" placeholder="+1 (555) 000-0000" />
-        <a href="#" class="btn btn-primary">Start free</a>
+        <input type="tel" placeholder="+1 (555) 000-0000" id="hero-phone" />
+        <a href="#" class="btn btn-primary" onclick="openModalWithPhone(event)"
+          >Start free</a
+        >
       </div>
       <p class="hero-disclaimer">
         No credit card required &nbsp;&middot;&nbsp; Reply STOP anytime
@@ -546,12 +831,11 @@
           <h2 class="section-heading">Start free, scale when you need to.</h2>
         </div>
         <div class="pricing-grid">
-          <!-- Free -->
           <div class="pricing-card">
             <p class="pricing-tier">Free</p>
             <div class="pricing-price">
-              <span class="pricing-amount">$0</span>
-              <span class="pricing-period">/ mo</span>
+              <span class="pricing-amount">$0</span
+              ><span class="pricing-period">/ mo</span>
             </div>
             <p class="pricing-desc">Try it out. No card needed.</p>
             <hr class="pricing-divider" />
@@ -563,16 +847,20 @@
               <li class="off">Priority processing</li>
               <li class="off">SMS account management</li>
             </ul>
-            <a href="#" class="btn btn-secondary btn-full">Get started free</a>
+            <a
+              href="#"
+              class="btn btn-secondary btn-full"
+              onclick="openModal(event)"
+              >Get started free</a
+            >
           </div>
 
-          <!-- Student -->
           <div class="pricing-card featured">
             <span class="pricing-badge">Most popular</span>
             <p class="pricing-tier">Student</p>
             <div class="pricing-price">
-              <span class="pricing-amount">$6</span>
-              <span class="pricing-period">/ mo</span>
+              <span class="pricing-amount">$6</span
+              ><span class="pricing-period">/ mo</span>
             </div>
             <p class="pricing-desc">Built for a full semester of lectures.</p>
             <hr class="pricing-divider" />
@@ -584,15 +872,19 @@
               <li>Priority processing</li>
               <li class="off">SMS account management</li>
             </ul>
-            <a href="#" class="btn btn-primary btn-full">Start Student plan</a>
+            <a
+              href="#"
+              class="btn btn-primary btn-full"
+              onclick="openModal(event)"
+              >Start Student plan</a
+            >
           </div>
 
-          <!-- Pro -->
           <div class="pricing-card">
             <p class="pricing-tier">Pro</p>
             <div class="pricing-price">
-              <span class="pricing-amount">$14</span>
-              <span class="pricing-period">/ mo</span>
+              <span class="pricing-amount">$14</span
+              ><span class="pricing-period">/ mo</span>
             </div>
             <p class="pricing-desc">Unlimited, for power users.</p>
             <hr class="pricing-divider" />
@@ -604,7 +896,12 @@
               <li>Priority processing</li>
               <li>SMS account management</li>
             </ul>
-            <a href="#" class="btn btn-secondary btn-full">Start Pro plan</a>
+            <a
+              href="#"
+              class="btn btn-secondary btn-full"
+              onclick="openModal(event)"
+              >Start Pro plan</a
+            >
           </div>
         </div>
         <p
@@ -622,8 +919,13 @@
       <h2>Ready to stop rewatching lectures?</h2>
       <p>Enter your number and send your first recording in under a minute.</p>
       <div class="cta-phone-input">
-        <input type="tel" placeholder="+1 (555) 000-0000" />
-        <a href="#" class="btn btn-primary">Start free</a>
+        <input type="tel" placeholder="+1 (555) 000-0000" id="cta-phone" />
+        <a
+          href="#"
+          class="btn btn-primary"
+          onclick="openModalWithPhone(event, 'cta-phone')"
+          >Start free</a
+        >
       </div>
       <p class="cta-disclaimer">
         Message &amp; data rates may apply &nbsp;&middot;&nbsp; Reply STOP to
@@ -646,7 +948,7 @@
           <ul>
             <li><a href="#how-it-works">How it works</a></li>
             <li><a href="#pricing">Pricing</a></li>
-            <li><a href="#">Sign up</a></li>
+            <li><a href="#" onclick="openModal(event)">Sign up</a></li>
           </ul>
         </div>
         <div class="footer-col">
@@ -673,5 +975,202 @@
         </ul>
       </div>
     </footer>
+
+    <!-- Signup Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+
+        <!-- Step 1: Phone -->
+        <div id="modal-step1">
+          <div class="modal-eyebrow">
+            <span class="modal-dot"></span> Free to start
+          </div>
+          <h2>Get your first transcript free.</h2>
+          <p class="modal-sub">
+            Enter your number and we'll text you when you're ready to go. No app
+            needed.
+          </p>
+          <div class="modal-steps">
+            <div class="modal-step-tab active">Your number</div>
+            <div class="modal-step-tab">Consent</div>
+            <div class="modal-step-tab">Done</div>
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-label">Mobile phone number</label>
+            <div class="phone-row">
+              <input class="modal-input country-code" value="+1" readonly />
+              <input
+                class="modal-input"
+                type="tel"
+                id="modal-phone"
+                placeholder="(555) 000-0000"
+                oninput="validatePhone()"
+              />
+            </div>
+          </div>
+          <button
+            class="modal-btn modal-btn-primary"
+            id="step1-btn"
+            onclick="goStep2()"
+            disabled
+          >
+            Continue
+          </button>
+          <p class="modal-hint">
+            By continuing you agree to our <a href="/terms">Terms</a> and
+            <a href="/privacy-policy">Privacy Policy</a>.
+          </p>
+        </div>
+
+        <!-- Step 2: Consent -->
+        <div id="modal-step2" style="display: none">
+          <div class="modal-eyebrow">
+            <span class="modal-dot"></span> One more thing
+          </div>
+          <h2>Confirm your consent.</h2>
+          <p class="modal-sub">
+            Carriers require us to confirm you've agreed to receive messages
+            before we can text you.
+          </p>
+          <div class="modal-steps">
+            <div class="modal-step-tab done">Your number</div>
+            <div class="modal-step-tab active">Consent</div>
+            <div class="modal-step-tab">Done</div>
+          </div>
+          <div class="consent-box">
+            <div class="consent-check">
+              <input
+                type="checkbox"
+                id="consent-checkbox"
+                onchange="validateConsent()"
+              />
+              <p class="consent-text">
+                By checking this box, you agree to receive text messages from
+                <strong>SMScribe</strong> at the number provided, including
+                transcription results, account notifications, and service
+                updates.
+                <strong
+                  >Message and data rates may apply. Message frequency
+                  varies.</strong
+                >
+                Reply <strong>STOP</strong> to unsubscribe or
+                <strong>HELP</strong> for support.
+              </p>
+            </div>
+          </div>
+          <button
+            class="modal-btn modal-btn-primary"
+            id="step2-btn"
+            onclick="goStep3()"
+            disabled
+          >
+            Create my account
+          </button>
+          <button class="modal-back" onclick="goBack()">← Go back</button>
+        </div>
+
+        <!-- Step 3: Success -->
+        <div id="modal-step3" style="display: none">
+          <div class="modal-success">
+            <div class="success-icon">✓</div>
+            <h3>You're in!</h3>
+            <p>We just sent a welcome text to</p>
+            <div class="success-number" id="success-number"></div>
+            <p>
+              Text us any audio file and we'll send back a full transcript.
+              Reply <strong>HELP</strong> anytime for support.
+            </p>
+          </div>
+          <button class="modal-btn modal-btn-ghost" onclick="closeModal()">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function openModal(e) {
+        if (e) e.preventDefault();
+        document.getElementById("modal-overlay").classList.add("open");
+        document.body.style.overflow = "hidden";
+      }
+
+      function openModalWithPhone(e, srcId) {
+        if (e) e.preventDefault();
+        const src = srcId || "hero-phone";
+        const val = document.getElementById(src).value.trim();
+        if (val) {
+          document.getElementById("modal-phone").value = val.replace(
+            /^\+1\s?/,
+            "",
+          );
+          validatePhone();
+        }
+        openModal();
+      }
+
+      function closeModal() {
+        document.getElementById("modal-overlay").classList.remove("open");
+        document.body.style.overflow = "";
+        document.getElementById("modal-step1").style.display = "block";
+        document.getElementById("modal-step2").style.display = "none";
+        document.getElementById("modal-step3").style.display = "none";
+        document.getElementById("modal-phone").value = "";
+        document.getElementById("consent-checkbox").checked = false;
+        document.getElementById("step1-btn").disabled = true;
+        document.getElementById("step2-btn").disabled = true;
+      }
+
+      function validatePhone() {
+        const v = document
+          .getElementById("modal-phone")
+          .value.replace(/\D/g, "");
+        document.getElementById("step1-btn").disabled = v.length < 10;
+      }
+
+      function validateConsent() {
+        document.getElementById("step2-btn").disabled =
+          !document.getElementById("consent-checkbox").checked;
+      }
+
+      function goStep2() {
+        document.getElementById("modal-step1").style.display = "none";
+        document.getElementById("modal-step2").style.display = "block";
+      }
+
+      function goBack() {
+        document.getElementById("modal-step2").style.display = "none";
+        document.getElementById("modal-step1").style.display = "block";
+      }
+
+      function goStep3() {
+        const raw = document
+          .getElementById("modal-phone")
+          .value.replace(/\D/g, "");
+        const fmt =
+          "+1 (" +
+          raw.slice(0, 3) +
+          ") " +
+          raw.slice(3, 6) +
+          "-" +
+          raw.slice(6, 10);
+        document.getElementById("success-number").textContent = fmt;
+        document.getElementById("modal-step2").style.display = "none";
+        document.getElementById("modal-step3").style.display = "block";
+      }
+
+      // Close on overlay click
+      document
+        .getElementById("modal-overlay")
+        .addEventListener("click", function (e) {
+          if (e.target === this) closeModal();
+        });
+
+      // Close on Escape
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeModal();
+      });
+    </script>
   </body>
 </html>
