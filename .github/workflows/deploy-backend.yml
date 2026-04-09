@@ -210,9 +210,7 @@ jobs:
               JWT_SECRET=${{ secrets.JWT_SECRET }},
               STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }},
               STRIPE_STUDENT_MONTHLY_PRICE_ID=${{ secrets.STRIPE_STUDENT_MONTHLY_PRICE_ID }},
-              STRIPE_STUDENT_ANNUAL_PRICE_ID=${{ secrets.STRIPE_STUDENT_ANNUAL_PRICE_ID }},
               STRIPE_PRO_MONTHLY_PRICE_ID=${{ secrets.STRIPE_PRO_MONTHLY_PRICE_ID }},
-              STRIPE_PRO_ANNUAL_PRICE_ID=${{ secrets.STRIPE_PRO_ANNUAL_PRICE_ID }}
             }" \
             --no-cli-pager
           aws lambda wait function-updated \
