@@ -14,8 +14,6 @@
         margin: 0 auto;
         padding: var(--space-12) var(--space-8) var(--space-24);
       }
-
-      /* ── Page header ── */
       .account-header {
         display: flex;
         align-items: center;
@@ -36,8 +34,6 @@
         color: var(--text-muted);
         margin-top: var(--space-1);
       }
-
-      /* ── Cards ── */
       .account-card {
         background: var(--white);
         border: 1px solid var(--border);
@@ -53,8 +49,6 @@
         color: var(--text-muted);
         margin-bottom: var(--space-5);
       }
-
-      /* ── Plan section ── */
       .plan-row {
         display: flex;
         align-items: center;
@@ -100,8 +94,6 @@
         gap: var(--space-3);
         flex-wrap: wrap;
       }
-
-      /* ── Usage bar ── */
       .usage-row {
         display: flex;
         justify-content: space-between;
@@ -140,8 +132,6 @@
         color: var(--text-muted);
         margin-top: var(--space-2);
       }
-
-      /* ── Upgrade options ── */
       .upgrade-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -198,8 +188,6 @@
         border-radius: var(--radius-full);
         margin-bottom: var(--space-2);
       }
-
-      /* ── Transcript history ── */
       .transcript-list {
         display: flex;
         flex-direction: column;
@@ -246,6 +234,11 @@
         color: var(--blue-700);
         border: 1px solid var(--blue-200);
       }
+      .transcript-status.processing {
+        background: var(--blue-50);
+        color: var(--blue-700);
+        border: 1px solid var(--blue-200);
+      }
       .transcript-status.failed {
         background: #fef2f2;
         color: #991b1b;
@@ -257,8 +250,6 @@
         color: var(--text-muted);
         font-size: var(--text-sm);
       }
-
-      /* ── Danger zone ── */
       .danger-row {
         display: flex;
         align-items: center;
@@ -287,8 +278,6 @@
       .btn-danger:hover {
         background: #fef2f2;
       }
-
-      /* ── Loading skeleton ── */
       .skeleton {
         background: linear-gradient(
           90deg,
@@ -308,8 +297,21 @@
           background-position: -200% 0;
         }
       }
-
-      /* ── Responsive ── */
+      .modal-input {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 0.625rem 0.875rem;
+        font-size: 15px;
+        color: var(--text-primary);
+        font-family: var(--font-sans);
+        outline: none;
+        transition: border-color var(--dur-base);
+      }
+      .modal-input:focus {
+        border-color: var(--blue-400);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
       @media (max-width: 600px) {
         .account-wrap {
           padding: var(--space-8) var(--space-5) var(--space-16);
@@ -328,7 +330,6 @@
     </style>
   </head>
   <body>
-    <!-- Nav -->
     <nav class="nav">
       <div class="nav-inner">
         <a href="/" class="nav-logo">SMS<span>cribe</span></a>
@@ -346,7 +347,6 @@
     </nav>
 
     <div class="account-wrap">
-      <!-- Page header -->
       <div class="account-header">
         <div>
           <h1 class="account-title">My Account</h1>
@@ -381,7 +381,6 @@
             </button>
           </div>
         </div>
-
         <div style="margin-top: var(--space-6)">
           <div class="usage-row">
             <span class="usage-label">Transcriptions this month</span>
@@ -404,26 +403,197 @@
         </div>
       </div>
 
-      <!-- Upgrade options (hidden for pro) -->
+      <!-- Upgrade options -->
       <div class="account-card" id="upgrade-card">
         <p class="account-card-title">Change Plan</p>
-        <div class="upgrade-grid" id="upgrade-grid">
-          <!-- Populated by JS -->
-        </div>
+        <div class="upgrade-grid" id="upgrade-grid"></div>
       </div>
 
-      <!-- Danger zone -->
+      <!-- Danger zone — paid users -->
       <div class="account-card" id="danger-card" style="display: none">
         <p class="account-card-title">Danger Zone</p>
         <div class="danger-row">
-          <p class="danger-label">
-            Cancel your subscription. You'll keep access until the end of your
-            current billing period, then be downgraded to the free plan.
-          </p>
+          <div>
+            <p
+              class="danger-label"
+              style="
+                font-weight: 500;
+                color: var(--text-primary);
+                margin-bottom: var(--space-1);
+              "
+            >
+              Cancel subscription
+            </p>
+            <p class="danger-label">
+              Downgrade to free at the end of your billing period.
+            </p>
+          </div>
           <button class="btn-danger" onclick="openPortal()">
-            Cancel subscription
+            Manage billing
           </button>
         </div>
+        <hr
+          style="
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: var(--space-5) 0;
+          "
+        />
+        <div class="danger-row">
+          <div>
+            <p
+              class="danger-label"
+              style="
+                font-weight: 500;
+                color: var(--text-primary);
+                margin-bottom: var(--space-1);
+              "
+            >
+              Delete account
+            </p>
+            <p class="danger-label">
+              Permanently delete your account, all transcripts, and cancel any
+              active subscription. This cannot be undone.
+            </p>
+          </div>
+          <button class="btn-danger" onclick="confirmDelete()">
+            Delete account
+          </button>
+        </div>
+      </div>
+
+      <!-- Danger zone — free users -->
+      <div class="account-card" id="danger-card-free" style="display: none">
+        <p class="account-card-title">Danger Zone</p>
+        <div class="danger-row">
+          <div>
+            <p
+              class="danger-label"
+              style="
+                font-weight: 500;
+                color: var(--text-primary);
+                margin-bottom: var(--space-1);
+              "
+            >
+              Delete account
+            </p>
+            <p class="danger-label">
+              Permanently delete your account and all transcripts. This cannot
+              be undone.
+            </p>
+          </div>
+          <button class="btn-danger" onclick="confirmDelete()">
+            Delete account
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete confirmation modal -->
+    <div
+      id="delete-overlay"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      "
+    >
+      <div
+        style="
+          background: var(--white);
+          border-radius: var(--radius-xl);
+          padding: 2rem;
+          width: 100%;
+          max-width: 400px;
+          box-shadow: var(--shadow-xl);
+        "
+      >
+        <h3
+          style="
+            font-family: var(--font-display);
+            font-size: var(--text-xl);
+            font-weight: var(--weight-bold);
+            color: var(--gray-900);
+            margin-bottom: var(--space-3);
+          "
+        >
+          Delete your account?
+        </h3>
+        <p
+          style="
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            line-height: var(--leading-relaxed);
+            margin-bottom: var(--space-5);
+          "
+        >
+          This will permanently delete your account, all transcript history, and
+          cancel any active subscription.
+          <strong>This cannot be undone.</strong>
+        </p>
+        <p
+          style="
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+          "
+        >
+          Type <strong>DELETE</strong> to confirm:
+        </p>
+        <input
+          id="delete-confirm-input"
+          class="modal-input"
+          type="text"
+          placeholder="DELETE"
+          oninput="validateDeleteInput()"
+          style="margin-bottom: var(--space-4)"
+        />
+        <div style="display: flex; gap: var(--space-3)">
+          <button
+            onclick="closeDeleteModal()"
+            class="btn btn-secondary"
+            style="flex: 1; justify-content: center"
+          >
+            Cancel
+          </button>
+          <button
+            id="delete-confirm-btn"
+            onclick="deleteAccount()"
+            disabled
+            style="
+              flex: 1;
+              justify-content: center;
+              background: #ef4444;
+              color: white;
+              border: 1px solid #ef4444;
+              border-radius: var(--radius-md);
+              font-size: var(--text-sm);
+              font-weight: var(--weight-medium);
+              padding: 0.625rem 1rem;
+              cursor: pointer;
+              opacity: 0.45;
+              transition: opacity 0.15s;
+            "
+          >
+            Delete forever
+          </button>
+        </div>
+        <p
+          id="delete-error"
+          style="
+            font-size: 12px;
+            color: var(--danger);
+            text-align: center;
+            margin-top: var(--space-3);
+            min-height: 18px;
+          "
+        ></p>
       </div>
     </div>
 
@@ -448,13 +618,6 @@
           features: "Unlimited · 6 hr max",
         },
       };
-
-      const PRICE_IDS = {
-        student: "price_1TKAEH3pypv654mBC2AYzpeU",
-        pro: "price_1TKAEi3pypv654mB0KHqEzvl",
-      };
-
-      // ── Auth ──────────────────────────────────────────────────────────────────
 
       function getToken() {
         return localStorage.getItem("smscribe_token");
@@ -483,64 +646,47 @@
         return res.json();
       }
 
-      // ── Load account data ─────────────────────────────────────────────────────
-
       async function loadAccount() {
-        const token = getToken();
-        if (!token) {
+        if (!getToken()) {
           window.location.href = "/?open=login";
           return;
         }
-
         const data = await authFetch("/user/me");
         if (!data) return;
 
         const { phone_number, plan, usage, recent_jobs } = data;
-
-        // Header
         document.getElementById("account-phone").textContent = phone_number;
-
-        // Plan
         document.getElementById("plan-name").textContent =
           PLANS[plan]?.label || plan;
         const badge = document.getElementById("plan-badge");
         badge.textContent = plan;
         badge.className = `plan-badge ${plan}`;
 
-        // Show manage billing for paid plans, upgrade for free
         if (plan === "free") {
           document.getElementById("upgrade-btn").style.display = "inline-flex";
+          document.getElementById("danger-card-free").style.display = "block";
         } else {
           document.getElementById("manage-btn").style.display = "inline-flex";
           document.getElementById("danger-card").style.display = "block";
         }
 
-        // Usage bar
         const current = usage.current_month;
-        const limit = usage.limit; // -1 = unlimited
+        const limit = usage.limit;
         const pct = limit === -1 ? 5 : Math.min((current / limit) * 100, 100);
-
         document.getElementById("usage-count").textContent =
           limit === -1 ? `${current} used` : `${current} / ${limit}`;
-
         const bar = document.getElementById("usage-bar");
         bar.style.width = `${pct}%`;
         if (pct >= 100) bar.classList.add("danger");
         else if (pct >= 80) bar.classList.add("warning");
-
         document.getElementById("usage-sub").textContent =
           limit === -1
             ? `Unlimited plan · up to ${usage.max_minutes_per_file} min per file`
             : `Resets on the 1st of each month · up to ${usage.max_minutes_per_file} min per file`;
 
-        // Transcript history
         renderTranscripts(recent_jobs || []);
-
-        // Upgrade options
         renderUpgradeGrid(plan);
       }
-
-      // ── Transcripts ───────────────────────────────────────────────────────────
 
       function renderTranscripts(jobs) {
         const list = document.getElementById("transcript-list");
@@ -560,10 +706,9 @@
                 ? `${job.duration_min} min`
                 : "";
             const words = job.word_count
-              ? `${job.word_count.toLocaleString()} words`
+              ? `${Number(job.word_count).toLocaleString()} words`
               : "";
             const meta = [dur, words].filter(Boolean).join(" · ");
-            const status = job.status;
             const link = job.presigned_url
               ? `<a href="${job.presigned_url}" target="_blank" class="btn btn-secondary btn-sm" style="flex-shrink:0">View</a>`
               : "";
@@ -574,7 +719,7 @@
             <span class="transcript-info">${meta || "Processing..."}</span>
           </div>
           <div style="display:flex;align-items:center;gap:var(--space-3)">
-            <span class="transcript-status ${status}">${status}</span>
+            <span class="transcript-status ${job.status}">${job.status}</span>
             ${link}
           </div>
         </div>`;
@@ -582,19 +727,14 @@
           .join("");
       }
 
-      // ── Upgrade grid ──────────────────────────────────────────────────────────
-
       function renderUpgradeGrid(currentPlan) {
         const grid = document.getElementById("upgrade-grid");
         const card = document.getElementById("upgrade-card");
-
         if (currentPlan === "pro") {
           card.style.display = "none";
           return;
         }
-
         const plans = currentPlan === "free" ? ["student", "pro"] : ["pro"];
-
         grid.innerHTML = plans
           .map((p) => {
             const isCurrent = p === currentPlan;
@@ -604,7 +744,7 @@
                 ? '<span class="upgrade-card-tag">Most popular</span><br>'
                 : "";
             return `
-        <div class="upgrade-card ${isCurrent ? "current" : ""}" onclick="${isCurrent ? "" : `selectPlan('${p}')`}">
+        <div class="upgrade-card ${isCurrent ? "current" : ""}">
           ${tag}
           <p class="upgrade-card-name">${info.label}</p>
           <p class="upgrade-card-price">${info.price} <span>${info.per}</span></p>
@@ -619,25 +759,17 @@
           .join("");
       }
 
-      // ── Plan selection → Stripe Checkout ─────────────────────────────────────
-
       async function selectPlan(plan) {
         const data = await authFetch("/stripe/checkout", {
           method: "POST",
           body: JSON.stringify({ plan, interval: "month" }),
         });
-        if (data?.checkout_url) {
-          window.location.href = data.checkout_url;
-        }
+        if (data?.checkout_url) window.location.href = data.checkout_url;
       }
-
-      // ── Stripe Portal (manage billing / cancel) ───────────────────────────────
 
       async function openPortal() {
         const data = await authFetch("/stripe/portal", { method: "POST" });
-        if (data?.portal_url) {
-          window.location.href = data.portal_url;
-        }
+        if (data?.portal_url) window.location.href = data.portal_url;
       }
 
       function scrollToUpgrade() {
@@ -646,7 +778,62 @@
           .scrollIntoView({ behavior: "smooth" });
       }
 
-      // ── Init ──────────────────────────────────────────────────────────────────
+      // ── Delete account ──────────────────────────────────────────────────────────
+
+      function confirmDelete() {
+        const overlay = document.getElementById("delete-overlay");
+        overlay.style.display = "flex";
+        document.body.style.overflow = "hidden";
+        document.getElementById("delete-confirm-input").value = "";
+        document.getElementById("delete-confirm-btn").disabled = true;
+        document.getElementById("delete-confirm-btn").style.opacity = ".45";
+        document.getElementById("delete-error").textContent = "";
+      }
+
+      function closeDeleteModal() {
+        document.getElementById("delete-overlay").style.display = "none";
+        document.body.style.overflow = "";
+      }
+
+      function validateDeleteInput() {
+        const val = document.getElementById("delete-confirm-input").value;
+        const btn = document.getElementById("delete-confirm-btn");
+        const valid = val === "DELETE";
+        btn.disabled = !valid;
+        btn.style.opacity = valid ? "1" : ".45";
+        btn.style.cursor = valid ? "pointer" : "not-allowed";
+      }
+
+      async function deleteAccount() {
+        const btn = document.getElementById("delete-confirm-btn");
+        btn.disabled = true;
+        btn.textContent = "Deleting...";
+        document.getElementById("delete-error").textContent = "";
+
+        try {
+          const data = await authFetch("/user/me", { method: "DELETE" });
+          if (!data) return;
+          if (data.error) {
+            document.getElementById("delete-error").textContent = data.error;
+            btn.disabled = false;
+            btn.textContent = "Delete forever";
+            return;
+          }
+          localStorage.removeItem("smscribe_token");
+          window.location.href = "/?deleted=true";
+        } catch {
+          document.getElementById("delete-error").textContent =
+            "Something went wrong. Please try again.";
+          btn.disabled = false;
+          btn.textContent = "Delete forever";
+        }
+      }
+
+      document
+        .getElementById("delete-overlay")
+        .addEventListener("click", function (e) {
+          if (e.target === this) closeDeleteModal();
+        });
 
       loadAccount();
     </script>
