@@ -138,8 +138,8 @@ def transcribe_and_send(request: dict):
         print("Loading faster-whisper medium model...")
         model = WhisperModel(
             "medium",
-            device="cuda",
-            compute_type="float16",
+            device="cpu",
+            compute_type="int8",
             download_root="/cache",
         )
 
