@@ -32,14 +32,12 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       # ── Build shared Lambda layer ─────────────────────────────────────────
-      # The layer contains: shared/db.py, shared/security.py + pip dependencies
-      # Mounted at /opt/shared in each Lambda function
       - name: Build shared layer
         run: |
           mkdir -p /tmp/layer/python/lib/python3.11/site-packages
-          cp shared/db.py       /tmp/layer/python/
-          cp shared/security.py /tmp/layer/python/
-          pip install -r requirements.txt \
+          cp backend/shared/db.py       /tmp/layer/python/
+          cp backend/shared/security.py /tmp/layer/python/
+          pip install -r backend/requirements.txt \
             --target /tmp/layer/python/lib/python3.11/site-packages \
             --quiet
           cd /tmp/layer
@@ -61,7 +59,7 @@ jobs:
       # ── Deploy each function ──────────────────────────────────────────────
       - name: Deploy smscribe-auth-verify-start
         run: |
-          cd functions/auth/verify_start
+          cd backend/functions/auth/verify_start
           zip -r /tmp/fn.zip handler.py -q
           aws lambda update-function-code \
             --function-name smscribe-auth-verify-start \
@@ -84,7 +82,7 @@ jobs:
 
       - name: Deploy smscribe-auth-verify-check
         run: |
-          cd functions/auth/verify_check
+          cd backend/functions/auth/verify_check
           zip -r /tmp/fn.zip handler.py -q
           aws lambda update-function-code \
             --function-name smscribe-auth-verify-check \
@@ -107,7 +105,7 @@ jobs:
 
       - name: Deploy smscribe-user-me
         run: |
-          cd functions/user/me
+          cd backend/functions/user/me
           zip -r /tmp/fn.zip handler.py -q
           aws lambda update-function-code \
             --function-name smscribe-user-me \
@@ -127,7 +125,7 @@ jobs:
 
       - name: Deploy smscribe-stripe-checkout
         run: |
-          cd functions/stripe/checkout
+          cd backend/functions/stripe/checkout
           zip -r /tmp/fn.zip handler.py -q
           aws lambda update-function-code \
             --function-name smscribe-stripe-checkout \
@@ -148,11 +146,11 @@ jobs:
               STRIPE_PRO_ANNUAL_PRICE_ID=${{ secrets.STRIPE_PRO_ANNUAL_PRICE_ID }}
             }" \
             --no-cli-pager
-          echo "smscribe-stripe-checkout deployed"
+          echo smscribe-stripe-checkout deployed"
 
       - name: Deploy smscribe-stripe-webhook
         run: |
-          cd functions/stripe/webhook
+          cd backend/functions/stripe/webhook
           zip -r /tmp/fn.zip handler.py -q
           aws lambda update-function-code \
             --function-name smscribe-stripe-webhook \
@@ -168,7 +166,7 @@ jobs:
               STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}
             }" \
             --no-cli-pager
-          echo "smscribe-stripe-webhook deployed"
+          echo "mscribe-stripe-webhook deployed"
 
       - name: Deployment summary
         run: |
