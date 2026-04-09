@@ -45,7 +45,7 @@ jobs:
           fi
 
           # individual functions
-          for fn in auth/verify_start auth/verify_check user/me stripe/checkout stripe/webhook stripe/portal; do
+          for fn in auth/verify_start auth/verify_check user/me stripe/checkout stripe/webhook stripe/portal telegram/webhook; do
             key=$(echo $fn | tr '/' '_')
             if git diff --name-only HEAD~1 HEAD | grep -qE "^backend/functions/${fn}/|^backend/(shared/|requirements)"; then
               echo "${key}=true" >> $GITHUB_OUTPUT
@@ -241,6 +241,30 @@ jobs:
           aws lambda wait function-updated \
             --function-name smscribe-stripe-portal
           echo "smscribe-stripe-portal deployed"
+
+      - name: Deploy smscribe-telegram-webhook
+        if: steps.changes.outputs.telegram_webhook == 'true'
+        run: |
+          cd backend/functions/telegram/webhook
+          zip -r /tmp/fn.zip handler.py -q
+          aws lambda update-function-code \
+            --function-name smscribe-telegram-webhook \
+            --zip-file fileb:///tmp/fn.zip \
+            --no-cli-pager
+          aws lambda wait function-updated \
+            --function-name smscribe-telegram-webhook
+          aws lambda update-function-configuration \
+            --function-name smscribe-telegram-webhook \
+            --layers ${{ steps.publish_layer.outputs.layer_arn }} \
+            --environment "Variables={
+              DYNAMODB_TABLE_PREFIX=smscribe-,
+              TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }},
+              MODAL_TRANSCRIBE_URL=${{ secrets.MODAL_TRANSCRIBE_URL }}
+            }" \
+            --no-cli-pager
+          aws lambda wait function-updated \
+            --function-name smscribe-telegram-webhook
+          echo "smscribe-telegram-webhook deployed"
 
       - name: Deployment summary
         run: |
