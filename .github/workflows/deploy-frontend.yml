@@ -28,7 +28,7 @@ jobs:
 
       - name: Deploy Frontend to S3
         run: |
-          aws s3 sync frontend/ s3://${{ secrets.S3_BUCKET_NAME }} \
+          aws s3 sync frontend/ s3://${{ secrets.S3_BUCKET_NAME }}
           echo "Frontend deployed"
 
       - name: Invalidate CloudFront cache
@@ -37,4 +37,4 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
             --paths "/*"
-            echo "CloudFront cache invalidated"
+          echo "CloudFront cache invalidated"
