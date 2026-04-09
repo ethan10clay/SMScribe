@@ -13,13 +13,12 @@ app = modal.App("smscribe")
 model_cache = modal.Volume.from_name("smscribe-model-cache", create_if_missing=True)
 
 image = (
-    modal.Image.from_registry(
-        "nvidia/cuda:12.1.1-cudnn8-runtime-debian11",
-        add_python="3.11",
-    )
+    modal.Image.debian_slim(python_version="3.11")
     .apt_install("ffmpeg")
     .pip_install(
         "faster-whisper==1.0.3",
+        "nvidia-cublas-cu12",
+        "nvidia-cudnn-cu12",
         "boto3",
         "requests",
         "fastapi",
