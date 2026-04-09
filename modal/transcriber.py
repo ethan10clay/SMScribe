@@ -14,7 +14,7 @@ model_cache = modal.Volume.from_name("smscribe-model-cache", create_if_missing=T
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
-    .apt_install("ffmpeg")
+    .apt_install("ffmpeg", "libcublas12", "libcudnn8")
     .pip_install(
         "faster-whisper==1.0.3",
         "boto3",
