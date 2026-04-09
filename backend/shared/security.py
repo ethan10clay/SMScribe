@@ -9,7 +9,14 @@ import json
 import os
 import time
 import base64
+from decimal import Decimal
 from typing import Optional
+
+class _DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return int(obj) if obj % 1 == 0 else float(obj)
+        return super().default(obj)
 
 JWT_SECRET   = os.environ.get("JWT_SECRET", "")
 JWT_EXPIRY   = 60 * 60 * 24 * 30  # 30 days
@@ -34,7 +41,7 @@ def ok(body: dict, status: int = 200) -> dict:
     return {
         "statusCode": status,
         "headers": cors_headers(),
-        "body": json.dumps(body),
+        "body": json.dumps(body, cls=_DecimalEncoder),
     }
 
 
