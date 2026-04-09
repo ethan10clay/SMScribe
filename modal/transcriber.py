@@ -32,8 +32,9 @@ image = (
     timeout=3600,
     volumes={"/cache": model_cache},
     secrets=[
-        modal.Secret.from_name("smscribe-aws"),
-    ],
+    modal.Secret.from_name("smscribe-aws"),
+    modal.Secret.from_name("smscribe-twilio"),  # for TELEGRAM_BOT_TOKEN
+],
 )
 @modal.fastapi_endpoint(method="POST")
 def transcribe_and_send(request: dict):
