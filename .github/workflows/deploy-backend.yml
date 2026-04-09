@@ -1,0 +1,175 @@
+name: Deploy Lambda Functions
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Build and deploy all Lambda functions
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # ── Build shared Lambda layer ─────────────────────────────────────────
+      # The layer contains: shared/db.py, shared/security.py + pip dependencies
+      # Mounted at /opt/shared in each Lambda function
+      - name: Build shared layer
+        run: |
+          mkdir -p /tmp/layer/python/lib/python3.11/site-packages
+          cp shared/db.py       /tmp/layer/python/
+          cp shared/security.py /tmp/layer/python/
+          pip install -r requirements.txt \
+            --target /tmp/layer/python/lib/python3.11/site-packages \
+            --quiet
+          cd /tmp/layer
+          zip -r /tmp/shared-layer.zip python/ -q
+
+      - name: Publish shared layer
+        id: publish_layer
+        run: |
+          LAYER_ARN=$(aws lambda publish-layer-version \
+            --layer-name smscribe-shared \
+            --description "SMScribe shared db + security + dependencies" \
+            --zip-file fileb:///tmp/shared-layer.zip \
+            --compatible-runtimes python3.11 \
+            --query LayerVersionArn \
+            --output text)
+          echo "layer_arn=$LAYER_ARN" >> $GITHUB_OUTPUT
+          echo "Published layer: $LAYER_ARN"
+
+      # ── Deploy each function ──────────────────────────────────────────────
+      - name: Deploy smscribe-auth-verify-start
+        run: |
+          cd functions/auth/verify_start
+          zip -r /tmp/fn.zip handler.py -q
+          aws lambda update-function-code \
+            --function-name smscribe-auth-verify-start \
+            --zip-file fileb:///tmp/fn.zip \
+            --no-cli-pager
+          aws lambda update-function-configuration \
+            --function-name smscribe-auth-verify-start \
+            --layers ${{ steps.publish_layer.outputs.layer_arn }} \
+            --environment "Variables={
+              AWS_REGION=${{ secrets.AWS_REGION }},
+              DYNAMODB_TABLE_PREFIX=smscribe-,
+              FRONTEND_URL=https://smscribe.com,
+              JWT_SECRET=${{ secrets.JWT_SECRET }},
+              TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }},
+              TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }},
+              TWILIO_VERIFY_SERVICE_SID=${{ secrets.TWILIO_VERIFY_SERVICE_SID }}
+            }" \
+            --no-cli-pager
+          echo "smscribe-auth-verify-start deployed"
+
+      - name: Deploy smscribe-auth-verify-check
+        run: |
+          cd functions/auth/verify_check
+          zip -r /tmp/fn.zip handler.py -q
+          aws lambda update-function-code \
+            --function-name smscribe-auth-verify-check \
+            --zip-file fileb:///tmp/fn.zip \
+            --no-cli-pager
+          aws lambda update-function-configuration \
+            --function-name smscribe-auth-verify-check \
+            --layers ${{ steps.publish_layer.outputs.layer_arn }} \
+            --environment "Variables={
+              AWS_REGION=${{ secrets.AWS_REGION }},
+              DYNAMODB_TABLE_PREFIX=smscribe-,
+              FRONTEND_URL=https://smscribe.com,
+              JWT_SECRET=${{ secrets.JWT_SECRET }},
+              TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }},
+              TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }},
+              TWILIO_VERIFY_SERVICE_SID=${{ secrets.TWILIO_VERIFY_SERVICE_SID }}
+            }" \
+            --no-cli-pager
+          echo "smscribe-auth-verify-check deployed"
+
+      - name: Deploy smscribe-user-me
+        run: |
+          cd functions/user/me
+          zip -r /tmp/fn.zip handler.py -q
+          aws lambda update-function-code \
+            --function-name smscribe-user-me \
+            --zip-file fileb:///tmp/fn.zip \
+            --no-cli-pager
+          aws lambda update-function-configuration \
+            --function-name smscribe-user-me \
+            --layers ${{ steps.publish_layer.outputs.layer_arn }} \
+            --environment "Variables={
+              AWS_REGION=${{ secrets.AWS_REGION }},
+              DYNAMODB_TABLE_PREFIX=smscribe-,
+              FRONTEND_URL=https://smscribe.com,
+              JWT_SECRET=${{ secrets.JWT_SECRET }}
+            }" \
+            --no-cli-pager
+          echo "smscribe-user-me deployed"
+
+      - name: Deploy smscribe-stripe-checkout
+        run: |
+          cd functions/stripe/checkout
+          zip -r /tmp/fn.zip handler.py -q
+          aws lambda update-function-code \
+            --function-name smscribe-stripe-checkout \
+            --zip-file fileb:///tmp/fn.zip \
+            --no-cli-pager
+          aws lambda update-function-configuration \
+            --function-name smscribe-stripe-checkout \
+            --layers ${{ steps.publish_layer.outputs.layer_arn }} \
+            --environment "Variables={
+              AWS_REGION=${{ secrets.AWS_REGION }},
+              DYNAMODB_TABLE_PREFIX=smscribe-,
+              FRONTEND_URL=https://smscribe.com,
+              JWT_SECRET=${{ secrets.JWT_SECRET }},
+              STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }},
+              STRIPE_STUDENT_MONTHLY_PRICE_ID=${{ secrets.STRIPE_STUDENT_MONTHLY_PRICE_ID }},
+              STRIPE_STUDENT_ANNUAL_PRICE_ID=${{ secrets.STRIPE_STUDENT_ANNUAL_PRICE_ID }},
+              STRIPE_PRO_MONTHLY_PRICE_ID=${{ secrets.STRIPE_PRO_MONTHLY_PRICE_ID }},
+              STRIPE_PRO_ANNUAL_PRICE_ID=${{ secrets.STRIPE_PRO_ANNUAL_PRICE_ID }}
+            }" \
+            --no-cli-pager
+          echo "smscribe-stripe-checkout deployed"
+
+      - name: Deploy smscribe-stripe-webhook
+        run: |
+          cd functions/stripe/webhook
+          zip -r /tmp/fn.zip handler.py -q
+          aws lambda update-function-code \
+            --function-name smscribe-stripe-webhook \
+            --zip-file fileb:///tmp/fn.zip \
+            --no-cli-pager
+          aws lambda update-function-configuration \
+            --function-name smscribe-stripe-webhook \
+            --layers ${{ steps.publish_layer.outputs.layer_arn }} \
+            --environment "Variables={
+              AWS_REGION=${{ secrets.AWS_REGION }},
+              DYNAMODB_TABLE_PREFIX=smscribe-,
+              STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }},
+              STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}
+            }" \
+            --no-cli-pager
+          echo "smscribe-stripe-webhook deployed"
+
+      - name: Deployment summary
+        run: |
+          echo ""
+          echo "All functions deployed successfully."
+          echo "API: https://${{ secrets.API_GATEWAY_ID }}.execute-api.${{ secrets.AWS_REGION }}.amazonaws.com/prod"
