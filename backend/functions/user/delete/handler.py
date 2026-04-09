@@ -93,5 +93,5 @@ def handler(event, context):
 
     return sec.ok({
         "message": "Account deleted successfully.",
-        "errors":  errors,  # non-fatal issues (e.g. S3 partial failure)
+        "errors":  errors,  # non-fatal issues (e.g. S3 partial failure))
     })
