@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Account — SMScribe</title>
+    <link rel="stylesheet" href="smscribe.css" />
+    <style>
+      .account-wrap {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: var(--space-12) var(--space-8) var(--space-24);
+      }
+
+      /* ── Page header ── */
+      .account-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--space-10);
+        flex-wrap: wrap;
+        gap: var(--space-4);
+      }
+      .account-title {
+        font-family: var(--font-display);
+        font-size: var(--text-3xl);
+        font-weight: var(--weight-bold);
+        color: var(--blue-900);
+        letter-spacing: var(--tracking-tight);
+      }
+      .account-phone {
+        font-size: var(--text-sm);
+        color: var(--text-muted);
+        margin-top: var(--space-1);
+      }
+
+      /* ── Cards ── */
+      .account-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: var(--space-6) var(--space-8);
+        margin-bottom: var(--space-5);
+      }
+      .account-card-title {
+        font-size: var(--text-xs);
+        font-weight: var(--weight-semibold);
+        letter-spacing: var(--tracking-widest);
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: var(--space-5);
+      }
+
+      /* ── Plan section ── */
+      .plan-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: var(--space-4);
+      }
+      .plan-info {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+      }
+      .plan-name {
+        font-family: var(--font-display);
+        font-size: var(--text-2xl);
+        font-weight: var(--weight-bold);
+        color: var(--blue-900);
+        text-transform: capitalize;
+      }
+      .plan-badge {
+        font-size: var(--text-xs);
+        font-weight: var(--weight-semibold);
+        padding: 0.2rem 0.75rem;
+        border-radius: var(--radius-full);
+        text-transform: capitalize;
+      }
+      .plan-badge.free {
+        background: var(--gray-100);
+        color: var(--gray-600);
+        border: 1px solid var(--gray-200);
+      }
+      .plan-badge.student {
+        background: var(--blue-50);
+        color: var(--blue-700);
+        border: 1px solid var(--blue-200);
+      }
+      .plan-badge.pro {
+        background: var(--blue-900);
+        color: var(--white);
+      }
+      .plan-actions {
+        display: flex;
+        gap: var(--space-3);
+        flex-wrap: wrap;
+      }
+
+      /* ── Usage bar ── */
+      .usage-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: var(--space-3);
+      }
+      .usage-label {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+      }
+      .usage-count {
+        font-size: var(--text-sm);
+        font-weight: var(--weight-semibold);
+        color: var(--text-primary);
+      }
+      .usage-bar-bg {
+        height: 8px;
+        background: var(--gray-100);
+        border-radius: var(--radius-full);
+        overflow: hidden;
+      }
+      .usage-bar-fill {
+        height: 100%;
+        border-radius: var(--radius-full);
+        background: var(--blue-500);
+        transition: width 0.4s ease;
+      }
+      .usage-bar-fill.warning {
+        background: #f59e0b;
+      }
+      .usage-bar-fill.danger {
+        background: #ef4444;
+      }
+      .usage-sub {
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        margin-top: var(--space-2);
+      }
+
+      /* ── Upgrade options ── */
+      .upgrade-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-4);
+        margin-top: var(--space-5);
+      }
+      .upgrade-card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: var(--space-5);
+        cursor: pointer;
+        transition:
+          border-color var(--dur-base),
+          box-shadow var(--dur-base);
+      }
+      .upgrade-card:hover {
+        border-color: var(--blue-300);
+        box-shadow: var(--shadow-md);
+      }
+      .upgrade-card.current {
+        border-color: var(--blue-400);
+        background: var(--blue-50);
+        cursor: default;
+      }
+      .upgrade-card-name {
+        font-size: var(--text-sm);
+        font-weight: var(--weight-semibold);
+        color: var(--text-primary);
+        margin-bottom: var(--space-1);
+      }
+      .upgrade-card-price {
+        font-size: var(--text-xl);
+        font-weight: var(--weight-bold);
+        color: var(--blue-900);
+        margin-bottom: var(--space-2);
+      }
+      .upgrade-card-price span {
+        font-size: var(--text-xs);
+        font-weight: var(--weight-regular);
+        color: var(--text-muted);
+      }
+      .upgrade-card-features {
+        font-size: var(--text-xs);
+        color: var(--text-secondary);
+        line-height: 1.6;
+      }
+      .upgrade-card-tag {
+        display: inline-block;
+        font-size: 10px;
+        font-weight: var(--weight-semibold);
+        background: var(--blue-500);
+        color: var(--white);
+        padding: 0.1rem 0.5rem;
+        border-radius: var(--radius-full);
+        margin-bottom: var(--space-2);
+      }
+
+      /* ── Transcript history ── */
+      .transcript-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+      }
+      .transcript-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--space-4) var(--space-5);
+        background: var(--gray-50);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        gap: var(--space-4);
+        flex-wrap: wrap;
+      }
+      .transcript-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .transcript-date {
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+      }
+      .transcript-info {
+        font-size: var(--text-sm);
+        color: var(--text-primary);
+        font-weight: var(--weight-medium);
+      }
+      .transcript-status {
+        font-size: var(--text-xs);
+        font-weight: var(--weight-medium);
+        padding: 0.2rem 0.6rem;
+        border-radius: var(--radius-full);
+      }
+      .transcript-status.done {
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+      }
+      .transcript-status.pending {
+        background: var(--blue-50);
+        color: var(--blue-700);
+        border: 1px solid var(--blue-200);
+      }
+      .transcript-status.failed {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+      }
+      .transcript-empty {
+        text-align: center;
+        padding: var(--space-10) 0;
+        color: var(--text-muted);
+        font-size: var(--text-sm);
+      }
+
+      /* ── Danger zone ── */
+      .danger-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: var(--space-4);
+      }
+      .danger-label {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        max-width: 400px;
+        line-height: var(--leading-relaxed);
+      }
+      .btn-danger {
+        background: var(--white);
+        color: var(--danger);
+        border: 1px solid #fecaca;
+        font-size: var(--text-sm);
+        font-weight: var(--weight-medium);
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: background var(--dur-base);
+        white-space: nowrap;
+      }
+      .btn-danger:hover {
+        background: #fef2f2;
+      }
+
+      /* ── Loading skeleton ── */
+      .skeleton {
+        background: linear-gradient(
+          90deg,
+          var(--gray-100) 25%,
+          var(--gray-50) 50%,
+          var(--gray-100) 75%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.2s infinite;
+        border-radius: var(--radius-md);
+      }
+      @keyframes shimmer {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+
+      /* ── Responsive ── */
+      @media (max-width: 600px) {
+        .account-wrap {
+          padding: var(--space-8) var(--space-5) var(--space-16);
+        }
+        .account-card {
+          padding: var(--space-5);
+        }
+        .upgrade-grid {
+          grid-template-columns: 1fr;
+        }
+        .plan-row {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Nav -->
+    <nav class="nav">
+      <div class="nav-inner">
+        <a href="/" class="nav-logo">SMS<span>cribe</span></a>
+        <ul class="nav-links">
+          <li><a href="/#how-it-works">How it works</a></li>
+          <li><a href="/#pricing">Pricing</a></li>
+          <li><a href="/privacy-policy">Privacy</a></li>
+        </ul>
+        <div class="nav-cta">
+          <a href="#" class="btn btn-ghost btn-sm" onclick="logout(event)"
+            >Log out</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <div class="account-wrap">
+      <!-- Page header -->
+      <div class="account-header">
+        <div>
+          <h1 class="account-title">My Account</h1>
+          <p class="account-phone" id="account-phone">Loading...</p>
+        </div>
+      </div>
+
+      <!-- Plan + Usage -->
+      <div class="account-card" id="plan-card">
+        <p class="account-card-title">Plan & Usage</p>
+        <div class="plan-row">
+          <div class="plan-info">
+            <span class="plan-name" id="plan-name">—</span>
+            <span class="plan-badge" id="plan-badge">—</span>
+          </div>
+          <div class="plan-actions">
+            <button
+              class="btn btn-primary btn-sm"
+              id="upgrade-btn"
+              onclick="scrollToUpgrade()"
+              style="display: none"
+            >
+              Upgrade plan
+            </button>
+            <button
+              class="btn btn-ghost btn-sm"
+              id="manage-btn"
+              onclick="openPortal()"
+              style="display: none"
+            >
+              Manage billing
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-top: var(--space-6)">
+          <div class="usage-row">
+            <span class="usage-label">Transcriptions this month</span>
+            <span class="usage-count" id="usage-count">—</span>
+          </div>
+          <div class="usage-bar-bg">
+            <div class="usage-bar-fill" id="usage-bar" style="width: 0%"></div>
+          </div>
+          <p class="usage-sub" id="usage-sub">Loading usage...</p>
+        </div>
+      </div>
+
+      <!-- Transcript history -->
+      <div class="account-card">
+        <p class="account-card-title">Transcript History</p>
+        <div class="transcript-list" id="transcript-list">
+          <div class="skeleton" style="height: 60px"></div>
+          <div class="skeleton" style="height: 60px"></div>
+          <div class="skeleton" style="height: 60px"></div>
+        </div>
+      </div>
+
+      <!-- Upgrade options (hidden for pro) -->
+      <div class="account-card" id="upgrade-card">
+        <p class="account-card-title">Change Plan</p>
+        <div class="upgrade-grid" id="upgrade-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Danger zone -->
+      <div class="account-card" id="danger-card" style="display: none">
+        <p class="account-card-title">Danger Zone</p>
+        <div class="danger-row">
+          <p class="danger-label">
+            Cancel your subscription. You'll keep access until the end of your
+            current billing period, then be downgraded to the free plan.
+          </p>
+          <button class="btn-danger" onclick="openPortal()">
+            Cancel subscription
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API = "https://7pkchc6ag3.execute-api.us-east-1.amazonaws.com/prod";
+
+      const PLANS = {
+        free: {
+          label: "Free",
+          price: "$0",
+          per: "/ mo",
+          features: "3 transcriptions · 30 min max",
+        },
+        student: {
+          label: "Student",
+          price: "$6",
+          per: "/ mo",
+          features: "30 transcriptions · 3 hr max",
+        },
+        pro: {
+          label: "Pro",
+          price: "$14",
+          per: "/ mo",
+          features: "Unlimited · 6 hr max",
+        },
+      };
+
+      const PRICE_IDS = {
+        student: "price_1TKAEH3pypv654mBC2AYzpeU",
+        pro: "price_1TKAEi3pypv654mB0KHqEzvl",
+      };
+
+      // ── Auth ──────────────────────────────────────────────────────────────────
+
+      function getToken() {
+        return localStorage.getItem("smscribe_token");
+      }
+
+      function logout(e) {
+        if (e) e.preventDefault();
+        localStorage.removeItem("smscribe_token");
+        window.location.href = "/";
+      }
+
+      async function authFetch(path, options = {}) {
+        const token = getToken();
+        const res = await fetch(`${API}${path}`, {
+          ...options,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            ...(options.headers || {}),
+          },
+        });
+        if (res.status === 401) {
+          logout();
+          return null;
+        }
+        return res.json();
+      }
+
+      // ── Load account data ─────────────────────────────────────────────────────
+
+      async function loadAccount() {
+        const token = getToken();
+        if (!token) {
+          window.location.href = "/?open=login";
+          return;
+        }
+
+        const data = await authFetch("/user/me");
+        if (!data) return;
+
+        const { phone_number, plan, usage, recent_jobs } = data;
+
+        // Header
+        document.getElementById("account-phone").textContent = phone_number;
+
+        // Plan
+        document.getElementById("plan-name").textContent =
+          PLANS[plan]?.label || plan;
+        const badge = document.getElementById("plan-badge");
+        badge.textContent = plan;
+        badge.className = `plan-badge ${plan}`;
+
+        // Show manage billing for paid plans, upgrade for free
+        if (plan === "free") {
+          document.getElementById("upgrade-btn").style.display = "inline-flex";
+        } else {
+          document.getElementById("manage-btn").style.display = "inline-flex";
+          document.getElementById("danger-card").style.display = "block";
+        }
+
+        // Usage bar
+        const current = usage.current_month;
+        const limit = usage.limit; // -1 = unlimited
+        const pct = limit === -1 ? 5 : Math.min((current / limit) * 100, 100);
+
+        document.getElementById("usage-count").textContent =
+          limit === -1 ? `${current} used` : `${current} / ${limit}`;
+
+        const bar = document.getElementById("usage-bar");
+        bar.style.width = `${pct}%`;
+        if (pct >= 100) bar.classList.add("danger");
+        else if (pct >= 80) bar.classList.add("warning");
+
+        document.getElementById("usage-sub").textContent =
+          limit === -1
+            ? `Unlimited plan · up to ${usage.max_minutes_per_file} min per file`
+            : `Resets on the 1st of each month · up to ${usage.max_minutes_per_file} min per file`;
+
+        // Transcript history
+        renderTranscripts(recent_jobs || []);
+
+        // Upgrade options
+        renderUpgradeGrid(plan);
+      }
+
+      // ── Transcripts ───────────────────────────────────────────────────────────
+
+      function renderTranscripts(jobs) {
+        const list = document.getElementById("transcript-list");
+        if (!jobs.length) {
+          list.innerHTML = `<div class="transcript-empty">No transcriptions yet. Send an audio file to get started.</div>`;
+          return;
+        }
+        list.innerHTML = jobs
+          .map((job) => {
+            const date = new Date(job.created_at).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            });
+            const dur =
+              job.duration_min && parseFloat(job.duration_min) > 0
+                ? `${job.duration_min} min`
+                : "";
+            const words = job.word_count
+              ? `${job.word_count.toLocaleString()} words`
+              : "";
+            const meta = [dur, words].filter(Boolean).join(" · ");
+            const status = job.status;
+            const link = job.presigned_url
+              ? `<a href="${job.presigned_url}" target="_blank" class="btn btn-secondary btn-sm" style="flex-shrink:0">View</a>`
+              : "";
+            return `
+        <div class="transcript-item">
+          <div class="transcript-meta">
+            <span class="transcript-date">${date}</span>
+            <span class="transcript-info">${meta || "Processing..."}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:var(--space-3)">
+            <span class="transcript-status ${status}">${status}</span>
+            ${link}
+          </div>
+        </div>`;
+          })
+          .join("");
+      }
+
+      // ── Upgrade grid ──────────────────────────────────────────────────────────
+
+      function renderUpgradeGrid(currentPlan) {
+        const grid = document.getElementById("upgrade-grid");
+        const card = document.getElementById("upgrade-card");
+
+        if (currentPlan === "pro") {
+          card.style.display = "none";
+          return;
+        }
+
+        const plans = currentPlan === "free" ? ["student", "pro"] : ["pro"];
+
+        grid.innerHTML = plans
+          .map((p) => {
+            const isCurrent = p === currentPlan;
+            const info = PLANS[p];
+            const tag =
+              p === "student"
+                ? '<span class="upgrade-card-tag">Most popular</span><br>'
+                : "";
+            return `
+        <div class="upgrade-card ${isCurrent ? "current" : ""}" onclick="${isCurrent ? "" : `selectPlan('${p}')`}">
+          ${tag}
+          <p class="upgrade-card-name">${info.label}</p>
+          <p class="upgrade-card-price">${info.price} <span>${info.per}</span></p>
+          <p class="upgrade-card-features">${info.features}</p>
+          ${
+            isCurrent
+              ? `<p style="font-size:var(--text-xs);color:var(--blue-600);margin-top:var(--space-2);font-weight:500">Current plan</p>`
+              : `<button class="btn btn-primary btn-sm" style="margin-top:var(--space-3);width:100%;justify-content:center" onclick="selectPlan('${p}')">Switch to ${info.label}</button>`
+          }
+        </div>`;
+          })
+          .join("");
+      }
+
+      // ── Plan selection → Stripe Checkout ─────────────────────────────────────
+
+      async function selectPlan(plan) {
+        const data = await authFetch("/stripe/checkout", {
+          method: "POST",
+          body: JSON.stringify({ plan, interval: "month" }),
+        });
+        if (data?.checkout_url) {
+          window.location.href = data.checkout_url;
+        }
+      }
+
+      // ── Stripe Portal (manage billing / cancel) ───────────────────────────────
+
+      async function openPortal() {
+        const data = await authFetch("/stripe/portal", { method: "POST" });
+        if (data?.portal_url) {
+          window.location.href = data.portal_url;
+        }
+      }
+
+      function scrollToUpgrade() {
+        document
+          .getElementById("upgrade-card")
+          .scrollIntoView({ behavior: "smooth" });
+      }
+
+      // ── Init ──────────────────────────────────────────────────────────────────
+
+      loadAccount();
+    </script>
+  </body>
+</html>
