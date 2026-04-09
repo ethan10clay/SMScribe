@@ -45,7 +45,7 @@ jobs:
           fi
 
           # individual functions
-          for fn in auth/verify_start auth/verify_check user/me stripe/checkout stripe/webhook; do
+          for fn in auth/verify_start auth/verify_check user/me stripe/checkout stripe/webhook stripe/portal; do
             key=$(echo $fn | tr '/' '_')
             if git diff --name-only HEAD~1 HEAD | grep -qE "^backend/functions/${fn}/|^backend/(shared/|requirements)"; then
               echo "${key}=true" >> $GITHUB_OUTPUT
@@ -216,6 +216,31 @@ jobs:
           aws lambda wait function-updated \
             --function-name smscribe-stripe-webhook
           echo "smscribe-stripe-webhook deployed"
+
+      - name: Deploy smscribe-stripe-portal
+        if: steps.changes.outputs.stripe_portal == 'true'
+        run: |
+          cd backend/functions/stripe/portal
+          zip -r /tmp/fn.zip handler.py -q
+          aws lambda update-function-code \
+            --function-name smscribe-stripe-portal \
+            --zip-file fileb:///tmp/fn.zip \
+            --no-cli-pager
+          aws lambda wait function-updated \
+            --function-name smscribe-stripe-portal
+          aws lambda update-function-configuration \
+            --function-name smscribe-stripe-portal \
+            --layers ${{ steps.publish_layer.outputs.layer_arn }} \
+            --environment "Variables={
+              DYNAMODB_TABLE_PREFIX=smscribe-,
+              FRONTEND_URL=https://smscribe.com,
+              JWT_SECRET=${{ secrets.JWT_SECRET }},
+              STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+            }" \
+            --no-cli-pager
+          aws lambda wait function-updated \
+            --function-name smscribe-stripe-portal
+          echo "smscribe-stripe-portal deployed"
 
       - name: Deployment summary
         run: |
