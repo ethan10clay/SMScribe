@@ -1,8 +1,6 @@
 """
 SMScribe - Optimized Modal Transcription
 L4 GPU + faster-whisper medium model
-~2-3 min processing for 90min audio
-~$0.12 per file (76% cheaper than A10G + large-v3)
 """
 
 import modal
