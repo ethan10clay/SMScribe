@@ -60,13 +60,14 @@ def handler(event, context):
 
 def _handle_checkout_completed(session: dict):
     """Checkout succeeded — activate the purchased plan."""
-    phone_number    = session.get("metadata", {}).get("phone_number", "")
-    plan            = session.get("metadata", {}).get("plan", "")
+    metadata        = session.get("metadata") or {}
+    phone_number    = metadata.get("phone_number", "")
+    plan            = metadata.get("plan", "")
     customer_id     = session.get("customer", "")
     subscription_id = session.get("subscription", "")
 
     if not phone_number or plan not in VALID_PLANS:
-        print(f"Missing metadata on checkout.session.completed: {session.get('id')}")
+        print(f"Missing or invalid metadata on checkout.session.completed: phone='{phone_number}' plan='{plan}' session={session.get('id')}")
         return
 
     print(f"Activating {plan} plan for {_mask(phone_number)}")
