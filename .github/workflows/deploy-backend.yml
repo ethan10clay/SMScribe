@@ -65,6 +65,8 @@ jobs:
             --function-name smscribe-auth-verify-start \
             --zip-file fileb:///tmp/fn.zip \
             --no-cli-pager
+          aws lambda wait function-updated \
+            --function-name smscribe-auth-verify-start
           aws lambda update-function-configuration \
             --function-name smscribe-auth-verify-start \
             --layers ${{ steps.publish_layer.outputs.layer_arn }} \
@@ -78,6 +80,8 @@ jobs:
               TWILIO_VERIFY_SERVICE_SID=${{ secrets.TWILIO_VERIFY_SERVICE_SID }}
             }" \
             --no-cli-pager
+          aws lambda wait function-updated \
+            --function-name smscribe-auth-verify-start
           echo "smscribe-auth-verify-start deployed"
 
       - name: Deploy smscribe-auth-verify-check
@@ -88,6 +92,8 @@ jobs:
             --function-name smscribe-auth-verify-check \
             --zip-file fileb:///tmp/fn.zip \
             --no-cli-pager
+          aws lambda wait function-updated \
+            --function-name smscribe-auth-verify-check
           aws lambda update-function-configuration \
             --function-name smscribe-auth-verify-check \
             --layers ${{ steps.publish_layer.outputs.layer_arn }} \
@@ -101,6 +107,8 @@ jobs:
               TWILIO_VERIFY_SERVICE_SID=${{ secrets.TWILIO_VERIFY_SERVICE_SID }}
             }" \
             --no-cli-pager
+          aws lambda wait function-updated \
+            --function-name smscribe-auth-verify-check
           echo "smscribe-auth-verify-check deployed"
 
       - name: Deploy smscribe-user-me
@@ -111,6 +119,8 @@ jobs:
             --function-name smscribe-user-me \
             --zip-file fileb:///tmp/fn.zip \
             --no-cli-pager
+          aws lambda wait function-updated \
+            --function-name smscribe-user-me
           aws lambda update-function-configuration \
             --function-name smscribe-user-me \
             --layers ${{ steps.publish_layer.outputs.layer_arn }} \
@@ -121,6 +131,8 @@ jobs:
               JWT_SECRET=${{ secrets.JWT_SECRET }}
             }" \
             --no-cli-pager
+          aws lambda wait function-updated \
+            --function-name smscribe-user-me
           echo "smscribe-user-me deployed"
 
       - name: Deploy smscribe-stripe-checkout
@@ -131,6 +143,8 @@ jobs:
             --function-name smscribe-stripe-checkout \
             --zip-file fileb:///tmp/fn.zip \
             --no-cli-pager
+          aws lambda wait function-updated \
+            --function-name smscribe-stripe-checkout
           aws lambda update-function-configuration \
             --function-name smscribe-stripe-checkout \
             --layers ${{ steps.publish_layer.outputs.layer_arn }} \
@@ -146,7 +160,9 @@ jobs:
               STRIPE_PRO_ANNUAL_PRICE_ID=${{ secrets.STRIPE_PRO_ANNUAL_PRICE_ID }}
             }" \
             --no-cli-pager
-          echo smscribe-stripe-checkout deployed"
+          aws lambda wait function-updated \
+            --function-name smscribe-stripe-checkout
+          echo "smscribe-stripe-checkout deployed"
 
       - name: Deploy smscribe-stripe-webhook
         run: |
@@ -156,6 +172,8 @@ jobs:
             --function-name smscribe-stripe-webhook \
             --zip-file fileb:///tmp/fn.zip \
             --no-cli-pager
+          aws lambda wait function-updated \
+            --function-name smscribe-stripe-webhook
           aws lambda update-function-configuration \
             --function-name smscribe-stripe-webhook \
             --layers ${{ steps.publish_layer.outputs.layer_arn }} \
@@ -166,10 +184,11 @@ jobs:
               STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}
             }" \
             --no-cli-pager
-          echo "mscribe-stripe-webhook deployed"
+          aws lambda wait function-updated \
+            --function-name smscribe-stripe-webhook
+          echo "smscribe-stripe-webhook deployed"
 
       - name: Deployment summary
         run: |
           echo ""
           echo "All functions deployed successfully."
-          echo "API: https://${{ secrets.API_GATEWAY_ID }}.execute-api.${{ secrets.AWS_REGION }}.amazonaws.com/prod"
