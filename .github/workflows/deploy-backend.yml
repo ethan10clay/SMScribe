@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy:
-    name: Build and deploy all Lambda functions
+    name: Build and deploy changed Lambda functions
     runs-on: ubuntu-latest
 
     env:
@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # need previous commit to diff against
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -31,8 +33,33 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # ── Build shared Lambda layer ─────────────────────────────────────────
+      # Detect which parts of the backend changed
+      - name: Detect changes
+        id: changes
+        run: |
+          # shared layer needs rebuilding if shared/ or requirements changed
+          if git diff --name-only HEAD~1 HEAD | grep -qE '^backend/(shared/|requirements)'; then
+            echo "shared=true" >> $GITHUB_OUTPUT
+          else
+            echo "shared=false" >> $GITHUB_OUTPUT
+          fi
+
+          # individual functions
+          for fn in auth/verify_start auth/verify_check user/me stripe/checkout stripe/webhook; do
+            key=$(echo $fn | tr '/' '_')
+            if git diff --name-only HEAD~1 HEAD | grep -qE "^backend/functions/${fn}/|^backend/(shared/|requirements)"; then
+              echo "${key}=true" >> $GITHUB_OUTPUT
+            else
+              echo "${key}=false" >> $GITHUB_OUTPUT
+            fi
+          done
+
+          echo "--- Changed files ---"
+          git diff --name-only HEAD~1 HEAD
+
+      # ── Build shared Lambda layer (only if shared/ or requirements changed) ───────────────────────────
       - name: Build shared layer
+        if: steps.changes.outputs.shared == 'true' || steps.changes.outputs.auth_verify_start == 'true' || steps.changes.outputs.auth_verify_check == 'true' || steps.changes.outputs.user_me == 'true' || steps.changes.outputs.stripe_checkout == 'true' || steps.changes.outputs.stripe_webhook == 'true'
         run: |
           mkdir -p /tmp/layer/python/lib/python3.11/site-packages
           cp backend/shared/db.py       /tmp/layer/python/
@@ -42,9 +69,11 @@ jobs:
             --quiet
           cd /tmp/layer
           zip -r /tmp/shared-layer.zip python/ -q
+          echo "Shared layer built"
 
       - name: Publish shared layer
         id: publish_layer
+        if: steps.changes.outputs.shared == 'true' || steps.changes.outputs.auth_verify_start == 'true' || steps.changes.outputs.auth_verify_check == 'true' || steps.changes.outputs.user_me == 'true' || steps.changes.outputs.stripe_checkout == 'true' || steps.changes.outputs.stripe_webhook == 'true'
         run: |
           LAYER_ARN=$(aws lambda publish-layer-version \
             --layer-name smscribe-shared \
@@ -56,8 +85,9 @@ jobs:
           echo "layer_arn=$LAYER_ARN" >> $GITHUB_OUTPUT
           echo "Published layer: $LAYER_ARN"
 
-      # ── Deploy each function ──────────────────────────────────────────────
+      # ── Deploy each function only if it changed ───────────────────────────
       - name: Deploy smscribe-auth-verify-start
+        if: steps.changes.outputs.auth_verify_start == 'true'
         run: |
           cd backend/functions/auth/verify_start
           zip -r /tmp/fn.zip handler.py -q
@@ -84,6 +114,7 @@ jobs:
           echo "smscribe-auth-verify-start deployed"
 
       - name: Deploy smscribe-auth-verify-check
+        if: steps.changes.outputs.auth_verify_check == 'true'
         run: |
           cd backend/functions/auth/verify_check
           zip -r /tmp/fn.zip handler.py -q
@@ -110,6 +141,7 @@ jobs:
           echo "smscribe-auth-verify-check deployed"
 
       - name: Deploy smscribe-user-me
+        if: steps.changes.outputs.user_me == 'true'
         run: |
           cd backend/functions/user/me
           zip -r /tmp/fn.zip handler.py -q
@@ -133,6 +165,7 @@ jobs:
           echo "smscribe-user-me deployed"
 
       - name: Deploy smscribe-stripe-checkout
+        if: steps.changes.outputs.stripe_checkout == 'true'
         run: |
           cd backend/functions/stripe/checkout
           zip -r /tmp/fn.zip handler.py -q
@@ -161,6 +194,7 @@ jobs:
           echo "smscribe-stripe-checkout deployed"
 
       - name: Deploy smscribe-stripe-webhook
+        if: steps.changes.outputs.stripe_webhook == 'true'
         run: |
           cd backend/functions/stripe/webhook
           zip -r /tmp/fn.zip handler.py -q
@@ -186,4 +220,4 @@ jobs:
       - name: Deployment summary
         run: |
           echo ""
-          echo "All functions deployed successfully."
+          echo "Deploy complete."
