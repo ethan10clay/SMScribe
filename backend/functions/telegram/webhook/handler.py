@@ -29,18 +29,19 @@ TELEGRAM_API      = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 # ─────────────────────────────────────────────────────────────────────────────-
 
 def handler(event, context):
+    print("RAW EVENT:", json.dumps(event.get("body", "")[:500]))
+    
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "body": "ok"}
 
     try:
         body   = json.loads(event.get("body") or "{}")
-        update = body
+        print("PARSED BODY KEYS:", list(body.keys()))
     except json.JSONDecodeError:
         return {"statusCode": 400, "body": "invalid json"}
 
-    message = update.get("message") or update.get("edited_message")
-    if not message:
-        return {"statusCode": 200, "body": "ok"}
+    message = body.get("message") or body.get("edited_message")
+    print("MESSAGE:", json.dumps(message)[:300] if message else "None")
 
     chat_id = message["chat"]["id"]
 
