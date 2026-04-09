@@ -10,8 +10,6 @@
     />
     <link rel="stylesheet" href="smscribe.css" />
     <style>
-      /* ── Index-only additions not in smscribe.css ── */
-
       .hero-phone-input {
         display: flex;
         align-items: center;
@@ -371,14 +369,13 @@
         position: relative;
       }
 
-      /* ── Signup Modal ── */
+      /* ── Modal ── */
       .modal-overlay {
         display: none;
         position: fixed;
         inset: 0;
         background: rgba(15, 23, 42, 0.55);
         backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
         z-index: 1000;
         align-items: center;
         justify-content: center;
@@ -387,7 +384,6 @@
       .modal-overlay.open {
         display: flex;
       }
-
       .modal {
         background: var(--white);
         border-radius: var(--radius-xl);
@@ -412,13 +408,11 @@
         justify-content: center;
         color: var(--gray-500);
         font-size: 15px;
-        line-height: 1;
         transition: background var(--dur-fast);
       }
       .modal-close:hover {
         background: var(--gray-200);
       }
-
       .modal-eyebrow {
         display: inline-flex;
         align-items: center;
@@ -453,9 +447,8 @@
         font-size: var(--text-sm);
         color: var(--text-secondary);
         line-height: var(--leading-relaxed);
-        margin-bottom: 2rem;
+        margin-bottom: 1.75rem;
       }
-
       .modal-steps {
         display: flex;
         margin-bottom: 1.75rem;
@@ -477,7 +470,6 @@
       .modal-step-tab.done {
         color: var(--blue-300);
       }
-
       .modal-form-group {
         margin-bottom: 1.25rem;
       }
@@ -508,7 +500,6 @@
       .modal-input::placeholder {
         color: var(--text-muted);
       }
-
       .phone-row {
         display: flex;
         gap: 0.5rem;
@@ -519,7 +510,6 @@
         background: var(--gray-50);
         color: var(--gray-500);
       }
-
       .consent-box {
         background: var(--blue-50);
         border: 1px solid var(--blue-100);
@@ -549,7 +539,6 @@
         color: var(--gray-800);
         font-weight: var(--weight-semibold);
       }
-
       .modal-btn {
         display: flex;
         align-items: center;
@@ -585,7 +574,6 @@
       .modal-btn-ghost:hover {
         background: var(--gray-50);
       }
-
       .modal-hint {
         font-size: 11px;
         color: var(--text-muted);
@@ -597,7 +585,6 @@
         color: var(--blue-500);
         text-decoration: none;
       }
-
       .modal-back {
         background: none;
         border: none;
@@ -611,7 +598,13 @@
       .modal-back:hover {
         color: var(--text-secondary);
       }
-
+      .modal-error {
+        font-size: 12px;
+        color: var(--danger);
+        text-align: center;
+        margin-top: 0.75rem;
+        min-height: 18px;
+      }
       .modal-success {
         text-align: center;
         padding: 0.5rem 0;
@@ -654,8 +647,13 @@
         margin-bottom: 1.25rem;
         font-family: monospace;
       }
+      .otp-input {
+        text-align: center;
+        font-size: 1.5rem;
+        letter-spacing: 0.5em;
+        font-weight: var(--weight-bold);
+      }
 
-      /* Responsive */
       @media (max-width: 768px) {
         .hiw-inner {
           grid-template-columns: 1fr;
@@ -696,8 +694,19 @@
           <li><a href="/privacy-policy">Privacy</a></li>
         </ul>
         <div class="nav-cta">
-          <a href="#" class="btn btn-ghost btn-sm" onclick="openModal(event)"
+          <a
+            href="#"
+            id="nav-login"
+            class="btn btn-ghost btn-sm"
+            onclick="openModal(event)"
             >Log in</a
+          >
+          <a
+            href="/account"
+            id="nav-account"
+            class="btn btn-ghost btn-sm"
+            style="display: none"
+            >My Account</a
           >
           <a href="#pricing" class="btn btn-primary btn-sm">Get started</a>
         </div>
@@ -713,7 +722,10 @@
       </p>
       <div class="hero-phone-input">
         <input type="tel" placeholder="+1 (555) 000-0000" id="hero-phone" />
-        <a href="#" class="btn btn-primary" onclick="openModalWithPhone(event)"
+        <a
+          href="#"
+          class="btn btn-primary"
+          onclick="openModalWithPhone(event, 'hero-phone')"
           >Start free</a
         >
       </div>
@@ -769,7 +781,6 @@
             </div>
           </div>
         </div>
-
         <div class="sms-frame">
           <div class="sms-frame-header">
             <div class="sms-avatar">S</div>
@@ -815,7 +826,7 @@
             <div class="sms-bubble in">
               Done! (54 min · 8,200 words)<br /><br /><em
                 >"Today we're covering monetary policy and the Fed's dual
-                mandate. The first thing to understand..."</em
+                mandate..."</em
               ><br /><br />Full transcript → smscribe.com/t/x9k2m
             </div>
           </div>
@@ -854,7 +865,6 @@
               >Get started free</a
             >
           </div>
-
           <div class="pricing-card featured">
             <span class="pricing-badge">Most popular</span>
             <p class="pricing-tier">Student</p>
@@ -879,7 +889,6 @@
               >Start Student plan</a
             >
           </div>
-
           <div class="pricing-card">
             <p class="pricing-tier">Pro</p>
             <div class="pricing-price">
@@ -958,14 +967,6 @@
             <li><a href="/terms">Terms &amp; Conditions</a></li>
           </ul>
         </div>
-        <div class="footer-col">
-          <h4>Support</h4>
-          <ul>
-            <li>
-              <a href="mailto:support@smscribe.com">support@smscribe.com</a>
-            </li>
-          </ul>
-        </div>
       </div>
       <div class="footer-bottom">
         <p class="footer-copy">&copy; 2025 SMScribe. All rights reserved.</p>
@@ -976,25 +977,24 @@
       </div>
     </footer>
 
-    <!-- Signup Modal -->
+    <!-- Signup / Login Modal -->
     <div class="modal-overlay" id="modal-overlay">
       <div class="modal">
         <button class="modal-close" onclick="closeModal()">✕</button>
 
-        <!-- Step 1: Phone -->
+        <!-- Step 1: Phone number -->
         <div id="modal-step1">
           <div class="modal-eyebrow">
             <span class="modal-dot"></span> Free to start
           </div>
           <h2>Get your first transcript free.</h2>
           <p class="modal-sub">
-            Enter your number and we'll text you when you're ready to go. No app
-            needed.
+            Enter your number and we'll send a verification code.
           </p>
           <div class="modal-steps">
-            <div class="modal-step-tab active">Your number</div>
+            <div class="modal-step-tab active">Phone</div>
             <div class="modal-step-tab">Consent</div>
-            <div class="modal-step-tab">Done</div>
+            <div class="modal-step-tab">Verify</div>
           </div>
           <div class="modal-form-group">
             <label class="modal-label">Mobile phone number</label>
@@ -1018,8 +1018,7 @@
             Continue
           </button>
           <p class="modal-hint">
-            By continuing you agree to our <a href="/terms">Terms</a> and
-            <a href="/privacy-policy">Privacy Policy</a>.
+            Already have an account? <a href="/account">Go to my account →</a>
           </p>
         </div>
 
@@ -1029,14 +1028,11 @@
             <span class="modal-dot"></span> One more thing
           </div>
           <h2>Confirm your consent.</h2>
-          <p class="modal-sub">
-            Carriers require us to confirm you've agreed to receive messages
-            before we can text you.
-          </p>
+          <p class="modal-sub">Required before we can send you messages.</p>
           <div class="modal-steps">
-            <div class="modal-step-tab done">Your number</div>
+            <div class="modal-step-tab done">Phone</div>
             <div class="modal-step-tab active">Consent</div>
-            <div class="modal-step-tab">Done</div>
+            <div class="modal-step-tab">Verify</div>
           </div>
           <div class="consent-box">
             <div class="consent-check">
@@ -1062,44 +1058,124 @@
           <button
             class="modal-btn modal-btn-primary"
             id="step2-btn"
-            onclick="goStep3()"
+            onclick="goStep2b()"
             disabled
           >
-            Create my account
+            Send verification code
           </button>
           <button class="modal-back" onclick="goBack()">← Go back</button>
         </div>
 
-        <!-- Step 3: Success -->
+        <!-- Step 3: OTP -->
         <div id="modal-step3" style="display: none">
+          <div class="modal-eyebrow">
+            <span class="modal-dot"></span> Check your messages
+          </div>
+          <h2>Enter your code.</h2>
+          <p class="modal-sub" id="otp-sub">
+            We sent a 6-digit code to your number.
+          </p>
+          <div class="modal-steps">
+            <div class="modal-step-tab done">Phone</div>
+            <div class="modal-step-tab done">Consent</div>
+            <div class="modal-step-tab active">Verify</div>
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-label">Verification code</label>
+            <input
+              class="modal-input otp-input"
+              type="tel"
+              id="modal-otp"
+              placeholder="123456"
+              maxlength="6"
+            />
+          </div>
+          <button
+            class="modal-btn modal-btn-primary"
+            id="step3-btn"
+            onclick="verifyOtp()"
+          >
+            Verify
+          </button>
+          <button class="modal-back" onclick="goBackConsent()">
+            ← Go back
+          </button>
+        </div>
+
+        <!-- Step 4: Success -->
+        <div id="modal-step4" style="display: none">
           <div class="modal-success">
             <div class="success-icon">✓</div>
             <h3>You're in!</h3>
-            <p>We just sent a welcome text to</p>
+            <p>Welcome to SMScribe. Your account is active at</p>
             <div class="success-number" id="success-number"></div>
-            <p>
-              Text us any audio file and we'll send back a full transcript.
-              Reply <strong>HELP</strong> anytime for support.
-            </p>
+            <p>Text us any audio file to get your first transcript.</p>
           </div>
+          <a
+            href="/account"
+            class="modal-btn modal-btn-primary"
+            style="margin-top: var(--space-4); text-decoration: none"
+            >Go to my account →</a
+          >
           <button class="modal-btn modal-btn-ghost" onclick="closeModal()">
             Close
           </button>
         </div>
+
+        <p class="modal-error" id="modal-error"></p>
       </div>
     </div>
 
     <script>
+      const API = "https://7pkchc6ag3.execute-api.us-east-1.amazonaws.com/prod";
+
+      function getToken() {
+        return localStorage.getItem("smscribe_token");
+      }
+      function setToken(t) {
+        localStorage.setItem("smscribe_token", t);
+      }
+
+      function updateNav() {
+        const token = getToken();
+        document.getElementById("nav-login").style.display = token
+          ? "none"
+          : "inline-flex";
+        document.getElementById("nav-account").style.display = token
+          ? "inline-flex"
+          : "none";
+      }
+
+      if (new URLSearchParams(window.location.search).get("open") === "login")
+        openModal();
+      updateNav();
+
+      function showStep(n) {
+        [1, 2, 3, 4].forEach((i) => {
+          const el = document.getElementById(`modal-step${i}`);
+          if (el) el.style.display = i === n ? "block" : "none";
+        });
+        document.getElementById("modal-error").textContent = "";
+      }
+
       function openModal(e) {
         if (e) e.preventDefault();
+        if (getToken()) {
+          window.location.href = "/account";
+          return;
+        }
         document.getElementById("modal-overlay").classList.add("open");
         document.body.style.overflow = "hidden";
+        showStep(1);
       }
 
       function openModalWithPhone(e, srcId) {
         if (e) e.preventDefault();
-        const src = srcId || "hero-phone";
-        const val = document.getElementById(src).value.trim();
+        if (getToken()) {
+          window.location.href = "/account";
+          return;
+        }
+        const val = document.getElementById(srcId)?.value.trim();
         if (val) {
           document.getElementById("modal-phone").value = val.replace(
             /^\+1\s?/,
@@ -1113,13 +1189,12 @@
       function closeModal() {
         document.getElementById("modal-overlay").classList.remove("open");
         document.body.style.overflow = "";
-        document.getElementById("modal-step1").style.display = "block";
-        document.getElementById("modal-step2").style.display = "none";
-        document.getElementById("modal-step3").style.display = "none";
         document.getElementById("modal-phone").value = "";
+        document.getElementById("modal-otp").value = "";
         document.getElementById("consent-checkbox").checked = false;
         document.getElementById("step1-btn").disabled = true;
         document.getElementById("step2-btn").disabled = true;
+        showStep(1);
       }
 
       function validatePhone() {
@@ -1134,41 +1209,97 @@
           !document.getElementById("consent-checkbox").checked;
       }
 
+      function showError(msg) {
+        document.getElementById("modal-error").textContent = msg;
+      }
+
       function goStep2() {
-        document.getElementById("modal-step1").style.display = "none";
-        document.getElementById("modal-step2").style.display = "block";
+        showStep(2);
       }
-
       function goBack() {
-        document.getElementById("modal-step2").style.display = "none";
-        document.getElementById("modal-step1").style.display = "block";
+        showStep(1);
+      }
+      function goBackConsent() {
+        showStep(2);
       }
 
-      function goStep3() {
+      async function goStep2b() {
         const raw = document
           .getElementById("modal-phone")
           .value.replace(/\D/g, "");
-        const fmt =
-          "+1 (" +
-          raw.slice(0, 3) +
-          ") " +
-          raw.slice(3, 6) +
-          "-" +
-          raw.slice(6, 10);
-        document.getElementById("success-number").textContent = fmt;
-        document.getElementById("modal-step2").style.display = "none";
-        document.getElementById("modal-step3").style.display = "block";
+        const phone = `+1${raw}`;
+        const btn = document.getElementById("step2-btn");
+        btn.disabled = true;
+        btn.textContent = "Sending...";
+        showError("");
+        try {
+          const res = await fetch(`${API}/auth/verify/start`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone_number: phone }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            showError(data.error || "Failed to send code.");
+            btn.disabled = false;
+            btn.textContent = "Send verification code";
+            return;
+          }
+          document.getElementById("otp-sub").textContent =
+            `We sent a 6-digit code to +1 (${raw.slice(0, 3)}) ${raw.slice(3, 6)}-${raw.slice(6, 10)}.`;
+          showStep(3);
+        } catch {
+          showError("Network error. Please try again.");
+          btn.disabled = false;
+          btn.textContent = "Send verification code";
+        }
       }
 
-      // Close on overlay click
+      async function verifyOtp() {
+        const raw = document
+          .getElementById("modal-phone")
+          .value.replace(/\D/g, "");
+        const phone = `+1${raw}`;
+        const code = document.getElementById("modal-otp").value.trim();
+        const btn = document.getElementById("step3-btn");
+        if (code.length < 6) {
+          showError("Enter the 6-digit code.");
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = "Verifying...";
+        showError("");
+        try {
+          const res = await fetch(`${API}/auth/verify/check`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone_number: phone, code }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            showError(data.error || "Invalid code. Try again.");
+            btn.disabled = false;
+            btn.textContent = "Verify";
+            return;
+          }
+          setToken(data.token);
+          updateNav();
+          document.getElementById("success-number").textContent =
+            `+1 (${raw.slice(0, 3)}) ${raw.slice(3, 6)}-${raw.slice(6, 10)}`;
+          showStep(4);
+        } catch {
+          showError("Network error. Please try again.");
+          btn.disabled = false;
+          btn.textContent = "Verify";
+        }
+      }
+
       document
         .getElementById("modal-overlay")
         .addEventListener("click", function (e) {
           if (e.target === this) closeModal();
         });
-
-      // Close on Escape
-      document.addEventListener("keydown", function (e) {
+      document.addEventListener("keydown", (e) => {
         if (e.key === "Escape") closeModal();
       });
     </script>
