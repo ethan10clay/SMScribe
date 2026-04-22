@@ -24,6 +24,7 @@ def handler(event, context):
         return _twiml_response()
 
     if not sec.validate_twilio_signature(event):
+        print("Rejected Twilio webhook: signature validation failed")
         return _twiml_response(
             "We could not verify this request.",
             status=403,
