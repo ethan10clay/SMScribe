@@ -293,6 +293,11 @@ jobs:
       - name: Deploy smscribe-twilio-webhook
         if: steps.changes.outputs.twilio_webhook == 'true'
         run: |
+          if ! aws lambda get-function --function-name smscribe-twilio-webhook --no-cli-pager >/dev/null 2>&1; then
+            echo "Missing Lambda function: smscribe-twilio-webhook"
+            echo "Create the Lambda and wire API Gateway POST /twilio/webhook to it once, then re-run this workflow."
+            exit 1
+          fi
           cd backend/functions/twilio/webhook
           zip -r /tmp/fn.zip handler.py -q
           aws lambda update-function-code \
