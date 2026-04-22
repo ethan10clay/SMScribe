@@ -22,6 +22,7 @@ image = (
         "boto3",
         "requests",
         "fastapi",
+        "twilio",
     )
 )
 

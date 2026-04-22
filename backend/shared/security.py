@@ -9,6 +9,7 @@ import json
 import os
 import time
 import base64
+from urllib.parse import parse_qs
 from decimal import Decimal
 from typing import Optional
 
@@ -140,39 +141,74 @@ def validate_twilio_signature(event: dict) -> bool:
     if not auth_token:
         return False
 
-    headers        = event.get("headers") or {}
-    twilio_sig     = headers.get("x-twilio-signature") or headers.get("X-Twilio-Signature") or ""
-    request_url    = _reconstruct_url(event)
-    body           = event.get("body") or ""
+    from twilio.request_validator import RequestValidator
 
-    # Parse POST params and sort
+    headers = event.get("headers") or {}
+    twilio_sig = headers.get("x-twilio-signature") or headers.get("X-Twilio-Signature") or ""
+    if not twilio_sig:
+        return False
+
+    body = event.get("body") or ""
     params = {}
     if body:
-        from urllib.parse import parse_qs
-        for k, v in parse_qs(body).items():
-            params[k] = v[0]
+        for k, v in parse_qs(body, keep_blank_values=True).items():
+            params[k] = v[0] if v else ""
 
-    # Build validation string: URL + sorted param key/value pairs
-    s = request_url
-    for key in sorted(params.keys()):
-        s += key + params[key]
-
-    expected = base64.b64encode(
-        hmac.new(auth_token.encode(), s.encode(), hashlib.sha1).digest()
-    ).decode()
-
-    return hmac.compare_digest(expected, twilio_sig)
+    validator = RequestValidator(auth_token)
+    for url in _candidate_twilio_urls(event):
+        try:
+            if validator.validate(url, params, twilio_sig):
+                return True
+        except Exception:
+            continue
+    return False
 
 
-def _reconstruct_url(event: dict) -> str:
-    ctx    = event.get("requestContext", {})
+def _candidate_twilio_urls(event: dict) -> list[str]:
+    ctx = event.get("requestContext", {})
     headers = event.get("headers") or {}
-    domain = headers.get("Host", "") or headers.get("host", "")
-    stage  = ctx.get("stage", "")
-    path   = event.get("path", "")
-    if stage and not path.startswith(f"/{stage}"):
-        path = f"/{stage}{path}"
-    return f"https://{domain}{path}"
+    domain = (
+        headers.get("X-Forwarded-Host")
+        or headers.get("x-forwarded-host")
+        or headers.get("Host")
+        or headers.get("host")
+        or ctx.get("domainName")
+        or ""
+    )
+    proto = (
+        headers.get("X-Forwarded-Proto")
+        or headers.get("x-forwarded-proto")
+        or "https"
+    )
+    stage = ctx.get("stage", "")
+
+    raw_paths = [
+        event.get("path") or "",
+        ctx.get("path") or "",
+        ctx.get("resourcePath") or "",
+    ]
+
+    candidates = []
+    for raw_path in raw_paths:
+        if not raw_path:
+            continue
+        if raw_path.startswith("http://") or raw_path.startswith("https://"):
+            candidates.append(raw_path)
+            continue
+
+        normalized = raw_path if raw_path.startswith("/") else f"/{raw_path}"
+        candidates.append(f"{proto}://{domain}{normalized}")
+        if stage and not normalized.startswith(f"/{stage}"):
+            candidates.append(f"{proto}://{domain}/{stage}{normalized}")
+
+    # Preserve order but remove duplicates.
+    seen = set()
+    unique = []
+    for candidate in candidates:
+        if candidate and candidate not in seen:
+            seen.add(candidate)
+            unique.append(candidate)
+    return unique
 
 
 # ─────────────────────────────────────────────────────────────────────────────
