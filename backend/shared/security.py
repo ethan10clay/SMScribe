@@ -166,7 +166,8 @@ def validate_twilio_signature(event: dict) -> bool:
 
 def _reconstruct_url(event: dict) -> str:
     ctx    = event.get("requestContext", {})
-    domain = event.get("headers", {}).get("Host", "")
+    headers = event.get("headers") or {}
+    domain = headers.get("Host", "") or headers.get("host", "")
     stage  = ctx.get("stage", "")
     path   = event.get("path", "")
     if stage and not path.startswith(f"/{stage}"):

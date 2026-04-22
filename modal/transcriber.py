@@ -49,6 +49,7 @@ def transcribe_and_send(request: dict):
     phone_number = request["phone_number"]
     chat_id      = request.get("chat_id", "")
     content_type = request.get("content_type", "audio/mpeg")
+    reply_from_number = request.get("reply_from_number", "")
     source       = request.get("source", "twilio")
 
     print(f"Starting transcription for {phone_number} via {source}")
@@ -105,8 +106,10 @@ def transcribe_and_send(request: dict):
                 kwargs["messaging_service_sid"] = messaging_service_sid
             elif from_number:
                 kwargs["from_"] = from_number
+            elif reply_from_number:
+                kwargs["from_"] = reply_from_number
             else:
-                print("Missing TWILIO_MESSAGING_SERVICE_SID or TWILIO_FROM_NUMBER")
+                print("Missing TWILIO_MESSAGING_SERVICE_SID, TWILIO_FROM_NUMBER, and reply_from_number")
                 return
             client.messages.create(**kwargs)
         except Exception as e:
