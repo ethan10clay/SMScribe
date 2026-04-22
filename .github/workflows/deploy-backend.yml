@@ -45,7 +45,7 @@ jobs:
           fi
 
           # individual functions
-          for fn in auth/verify_start auth/verify_check user/me user/delete stripe/checkout stripe/webhook stripe/portal telegram/webhook; do
+          for fn in auth/verify_start auth/verify_check user/me user/delete stripe/checkout stripe/webhook stripe/portal telegram/webhook twilio/webhook; do
             key=$(echo $fn | tr '/' '_')
             if git diff --name-only HEAD~1 HEAD | grep -qE "^backend/functions/${fn}/|^backend/(shared/|requirements)"; then
               echo "${key}=true" >> $GITHUB_OUTPUT
@@ -59,7 +59,7 @@ jobs:
 
       # ── Build shared Lambda layer (only if shared/ or requirements changed) ───────────────────────────
       - name: Build shared layer
-        if: steps.changes.outputs.shared == 'true' || steps.changes.outputs.auth_verify_start == 'true' || steps.changes.outputs.auth_verify_check == 'true' || steps.changes.outputs.user_me == 'true' || steps.changes.outputs.stripe_checkout == 'true' || steps.changes.outputs.stripe_webhook == 'true'
+        if: steps.changes.outputs.shared == 'true' || steps.changes.outputs.auth_verify_start == 'true' || steps.changes.outputs.auth_verify_check == 'true' || steps.changes.outputs.user_me == 'true' || steps.changes.outputs.user_delete == 'true' || steps.changes.outputs.stripe_checkout == 'true' || steps.changes.outputs.stripe_webhook == 'true' || steps.changes.outputs.stripe_portal == 'true' || steps.changes.outputs.telegram_webhook == 'true' || steps.changes.outputs.twilio_webhook == 'true'
         run: |
           mkdir -p /tmp/layer/python/lib/python3.11/site-packages
           cp backend/shared/db.py       /tmp/layer/python/
@@ -73,7 +73,7 @@ jobs:
 
       - name: Publish shared layer
         id: publish_layer
-        if: steps.changes.outputs.shared == 'true' || steps.changes.outputs.auth_verify_start == 'true' || steps.changes.outputs.auth_verify_check == 'true' || steps.changes.outputs.user_me == 'true' || steps.changes.outputs.stripe_checkout == 'true' || steps.changes.outputs.stripe_webhook == 'true'
+        if: steps.changes.outputs.shared == 'true' || steps.changes.outputs.auth_verify_start == 'true' || steps.changes.outputs.auth_verify_check == 'true' || steps.changes.outputs.user_me == 'true' || steps.changes.outputs.user_delete == 'true' || steps.changes.outputs.stripe_checkout == 'true' || steps.changes.outputs.stripe_webhook == 'true' || steps.changes.outputs.stripe_portal == 'true' || steps.changes.outputs.telegram_webhook == 'true' || steps.changes.outputs.twilio_webhook == 'true'
         run: |
           LAYER_ARN=$(aws lambda publish-layer-version \
             --layer-name smscribe-shared \
@@ -289,6 +289,30 @@ jobs:
           aws lambda wait function-updated \
             --function-name smscribe-telegram-webhook
           echo "smscribe-telegram-webhook deployed"
+
+      - name: Deploy smscribe-twilio-webhook
+        if: steps.changes.outputs.twilio_webhook == 'true'
+        run: |
+          cd backend/functions/twilio/webhook
+          zip -r /tmp/fn.zip handler.py -q
+          aws lambda update-function-code \
+            --function-name smscribe-twilio-webhook \
+            --zip-file fileb:///tmp/fn.zip \
+            --no-cli-pager
+          aws lambda wait function-updated \
+            --function-name smscribe-twilio-webhook
+          aws lambda update-function-configuration \
+            --function-name smscribe-twilio-webhook \
+            --layers ${{ steps.publish_layer.outputs.layer_arn }} \
+            --environment "Variables={
+              DYNAMODB_TABLE_PREFIX=smscribe-,
+              TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }},
+              MODAL_TRANSCRIBE_URL=${{ secrets.MODAL_TRANSCRIBE_URL }}
+            }" \
+            --no-cli-pager
+          aws lambda wait function-updated \
+            --function-name smscribe-twilio-webhook
+          echo "smscribe-twilio-webhook deployed"
 
       - name: Deployment summary
         run: |

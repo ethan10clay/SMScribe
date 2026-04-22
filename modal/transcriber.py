@@ -35,7 +35,7 @@ image = (
     volumes={"/cache": model_cache},
     secrets=[
     modal.Secret.from_name("smscribe-aws"),
-    modal.Secret.from_name("smscribe-twilio"),  # for TELEGRAM_BOT_TOKEN
+    modal.Secret.from_name("smscribe-twilio"),
 ],
 )
 @modal.fastapi_endpoint(method="POST")
@@ -43,12 +43,13 @@ def transcribe_and_send(request: dict):
     from faster_whisper import WhisperModel
     import requests
     import boto3
+    from twilio.rest import Client
 
     file_url     = request["file_url"]
     phone_number = request["phone_number"]
     chat_id      = request.get("chat_id", "")
     content_type = request.get("content_type", "audio/mpeg")
-    source       = request.get("source", "telegram")
+    source       = request.get("source", "twilio")
 
     print(f"Starting transcription for {phone_number} via {source}")
 
@@ -90,6 +91,33 @@ def transcribe_and_send(request: dict):
         except Exception as e:
             print(f"Telegram send error: {e}")
 
+    def _send_sms(text: str):
+        account_sid = os.environ.get("TWILIO_ACCOUNT_SID", "")
+        auth_token = os.environ.get("TWILIO_AUTH_TOKEN", "")
+        messaging_service_sid = os.environ.get("TWILIO_MESSAGING_SERVICE_SID", "")
+        from_number = os.environ.get("TWILIO_FROM_NUMBER", "")
+        if not account_sid or not auth_token:
+            return
+        try:
+            client = Client(account_sid, auth_token)
+            kwargs = {"to": phone_number, "body": text}
+            if messaging_service_sid:
+                kwargs["messaging_service_sid"] = messaging_service_sid
+            elif from_number:
+                kwargs["from_"] = from_number
+            else:
+                print("Missing TWILIO_MESSAGING_SERVICE_SID or TWILIO_FROM_NUMBER")
+                return
+            client.messages.create(**kwargs)
+        except Exception as e:
+            print(f"Twilio send error: {e}")
+
+    def _notify_user(text: str):
+        if source == "telegram":
+            _send_telegram(text)
+            return
+        _send_sms(text)
+
     try:
         # Create job record in DynamoDB
         from datetime import datetime, timezone
@@ -113,7 +141,14 @@ def transcribe_and_send(request: dict):
 
         # Download audio
         print("Downloading audio...")
-        response = requests.get(file_url, timeout=300)
+        request_kwargs = {"timeout": 300}
+        if source == "twilio":
+            request_kwargs["auth"] = (
+                os.environ.get("TWILIO_ACCOUNT_SID", ""),
+                os.environ.get("TWILIO_AUTH_TOKEN", ""),
+            )
+
+        response = requests.get(file_url, **request_kwargs)
         response.raise_for_status()
         audio_data = response.content
         print(f"Downloaded {len(audio_data)} bytes")
@@ -164,7 +199,7 @@ def transcribe_and_send(request: dict):
 
         if not transcript:
             _update_job("failed", error="No speech detected")
-            _send_telegram("No speech detected in your audio. Please try again with a clearer recording.")
+            _notify_user("No speech detected in your audio. Please try again with a clearer recording.")
             return {"status": "no_speech", "job_id": job_id}
 
         word_count = len(transcript.split())
@@ -196,14 +231,14 @@ def transcribe_and_send(request: dict):
             word_count=word_count,
         )
 
-        # Send result to Telegram
+        # Send result back to the source channel
         preview = transcript[:300] + "..." if len(transcript) > 300 else transcript
         message = (
             f"✅ Transcript ready! ({duration_min} min · {word_count:,} words)\n\n"
             f"Preview:\n\"{preview}\"\n\n"
             f"Full transcript:\n{presigned_url}"
         )
-        _send_telegram(message)
+        _notify_user(message)
 
         print("Done!")
         return {
@@ -219,7 +254,7 @@ def transcribe_and_send(request: dict):
         traceback.print_exc()
         try:
             _update_job("failed", error=str(e)[:500])
-            _send_telegram(f"Sorry, transcription failed. Please try again. (Error: {str(e)[:100]})")
+            _notify_user(f"Sorry, transcription failed. Please try again. (Error: {str(e)[:100]})")
         except Exception:
             pass
         raise
