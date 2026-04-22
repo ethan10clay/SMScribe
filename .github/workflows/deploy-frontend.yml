@@ -7,6 +7,10 @@ on:
       - "frontend/**"
       - ".github/workflows/deploy-frontend.yml"
 
+concurrency:
+  group: deploy-frontend-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy:
     name: Deploy site to S3 + invalidate CloudFront
@@ -18,8 +22,35 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect frontend changes
+        id: changes
+        run: |
+          BASE_SHA="${{ github.event.before }}"
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA="$(git rev-parse HEAD^)"
+          fi
+          HEAD_SHA="${{ github.sha }}"
+          CHANGED_FILES="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+
+          echo "Comparing $BASE_SHA..$HEAD_SHA"
+          echo "--- Changed files ---"
+          printf '%s\n' "$CHANGED_FILES"
+
+          if printf '%s\n' "$CHANGED_FILES" | grep -qE '^frontend/'; then
+            echo "frontend_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "frontend_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Skip workflow-only change
+        if: steps.changes.outputs.frontend_changed != 'true'
+        run: echo "No frontend files changed; skipping site deploy."
 
       - name: Configure AWS credentials
+        if: steps.changes.outputs.frontend_changed == 'true'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -27,12 +58,13 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Deploy Frontend to S3
+        if: steps.changes.outputs.frontend_changed == 'true'
         run: |
           aws s3 sync frontend/ s3://${{ secrets.S3_BUCKET_NAME }}
           echo "Frontend deployed"
 
       - name: Invalidate CloudFront cache
-        if: ${{ env.CLOUDFRONT_DISTRIBUTION_ID != '' }}
+        if: steps.changes.outputs.frontend_changed == 'true' && env.CLOUDFRONT_DISTRIBUTION_ID != ''
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
