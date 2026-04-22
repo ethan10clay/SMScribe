@@ -7,6 +7,10 @@ on:
       - "modal/**"
       - ".github/workflows/deploy-modal.yml"
 
+concurrency:
+  group: deploy-modal-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy:
     name: Deploy transcriber to Modal
@@ -15,20 +19,51 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect modal changes
+        id: changes
+        run: |
+          BASE_SHA="${{ github.event.before }}"
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA="$(git rev-parse HEAD^)"
+          fi
+          HEAD_SHA="${{ github.sha }}"
+          CHANGED_FILES="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+
+          echo "Comparing $BASE_SHA..$HEAD_SHA"
+          echo "--- Changed files ---"
+          printf '%s\n' "$CHANGED_FILES"
+
+          if printf '%s\n' "$CHANGED_FILES" | grep -qE '^modal/'; then
+            echo "modal_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "modal_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Skip workflow-only change
+        if: steps.changes.outputs.modal_changed != 'true'
+        run: echo "No modal code changes detected; skipping Modal deployment."
 
       - name: Set up Python
+        if: steps.changes.outputs.modal_changed == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Install Modal
+        if: steps.changes.outputs.modal_changed == 'true'
         run: pip install modal
 
       - name: Authenticate Modal
+        if: steps.changes.outputs.modal_changed == 'true'
         run: modal token set --token-id ${{ secrets.MODAL_TOKEN_ID }} --token-secret ${{ secrets.MODAL_TOKEN_SECRET }}
 
       - name: Deploy transcriber
+        if: steps.changes.outputs.modal_changed == 'true'
         run: modal deploy modal/transcriber.py
 
       - name: Print endpoint URL
+        if: steps.changes.outputs.modal_changed == 'true'
         run: echo "Transcriber deployed. Update MODAL_TRANSCRIBE_URL secret if the URL changed."
