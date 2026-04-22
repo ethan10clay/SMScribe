@@ -53,6 +53,9 @@ def handler(event, context):
     is_new_user = not db.user_exists(phone_number)
     user        = db.create_user(phone_number)
 
+    if is_new_user:
+        _send_welcome_sms(phone_number)
+
     # Issue JWT
     token = sec.create_jwt(phone_number)
 
@@ -64,3 +67,51 @@ def handler(event, context):
             "plan":         user["plan"],
         },
     }, status=201 if is_new_user else 200)
+
+
+def _send_welcome_sms(phone_number: str):
+    """Best-effort welcome text after a newly verified signup."""
+    try:
+        from twilio.rest import Client
+
+        client = Client(
+            os.environ["TWILIO_ACCOUNT_SID"],
+            os.environ["TWILIO_AUTH_TOKEN"],
+        )
+
+        message_body = (
+            "Welcome to SMScribe! Your number is all set up. "
+            "Reply with an audio file or voice memo any time and we'll text back your transcript. "
+            "Reply HELP for support."
+        )
+
+        send_kwargs = {
+            "to": phone_number,
+            "body": message_body,
+        }
+
+        messaging_service_sid = os.environ.get("TWILIO_MESSAGING_SERVICE_SID", "").strip()
+        from_number = os.environ.get("TWILIO_FROM_NUMBER", "").strip()
+
+        if messaging_service_sid:
+            send_kwargs["messaging_service_sid"] = messaging_service_sid
+        elif from_number:
+            send_kwargs["from_"] = from_number
+        else:
+            numbers = client.incoming_phone_numbers.list(limit=20)
+            sms_number = next(
+                (
+                    n.phone_number
+                    for n in numbers
+                    if getattr(n, "capabilities", {}).get("sms")
+                ),
+                None,
+            )
+            if not sms_number:
+                print("No SMS-capable Twilio sender found for welcome message")
+                return
+            send_kwargs["from_"] = sms_number
+
+        client.messages.create(**send_kwargs)
+    except Exception as exc:
+        print(f"Twilio welcome SMS error: {exc}")
