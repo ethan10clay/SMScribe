@@ -210,7 +210,10 @@ def _handle_audio(chat_id: int, message: dict):
             pass  # expected — Modal is async
         except Exception as e:
             print(f"Error triggering Modal: {e}")
-            db.increment_usage(phone)  # refund usage on trigger failure
+            try:
+                db.decrement_usage(phone)
+            except Exception as refund_error:
+                print(f"Error refunding usage: {refund_error}")
             _send_message(chat_id, "Something went wrong starting transcription. Please try again.")
     else:
         print("MODAL_TRANSCRIBE_URL not set — skipping transcription trigger")

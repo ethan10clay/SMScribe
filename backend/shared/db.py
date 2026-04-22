@@ -266,6 +266,21 @@ def increment_usage(phone_number: str) -> int:
     return int(resp["Attributes"]["transcription_count"])
 
 
+def decrement_usage(phone_number: str) -> int:
+    """Best-effort rollback for a failed transcription start."""
+    resp = _table(USAGE_TABLE).update_item(
+        Key={"phone_number": phone_number, "month": _current_month()},
+        UpdateExpression="ADD transcription_count :minus_one",
+        ConditionExpression="attribute_exists(transcription_count) AND transcription_count >= :one",
+        ExpressionAttributeValues={
+            ":minus_one": -1,
+            ":one": 1,
+        },
+        ReturnValues="UPDATED_NEW",
+    )
+    return int(resp["Attributes"]["transcription_count"])
+
+
 def get_usage(phone_number: str, month: Optional[str] = None) -> int:
     month = month or _current_month()
     resp = _table(USAGE_TABLE).get_item(
