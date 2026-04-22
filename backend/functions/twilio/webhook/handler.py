@@ -67,6 +67,7 @@ def _handle_media(phone_number: str, user: dict, params: dict):
 
     media_url = (params.get("MediaUrl0") or "").strip()
     content_type = (params.get("MediaContentType0") or "").strip().lower()
+    reply_from_number = (params.get("To") or "").strip()
     if not media_url:
         return _twiml_response("We couldn't read your attachment. Please try again.")
 
@@ -94,6 +95,7 @@ def _handle_media(phone_number: str, user: dict, params: dict):
                 "file_url": media_url,
                 "phone_number": phone_number,
                 "content_type": content_type or "audio/mpeg",
+                "reply_from_number": reply_from_number,
                 "source": "twilio",
             },
             timeout=5,
