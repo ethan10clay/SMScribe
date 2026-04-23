@@ -135,7 +135,6 @@ def _handle_help(phone_number: str, user: dict):
         f"Max file length: {limits['max_minutes']} min\n"
         f"Manage your plan: smscribe.com/account\n"
         f"Support: support@smscribe.com\n"
-        f"Tip: if HELP returns Twilio's carrier message, use STATUS instead."
     )
 
 
