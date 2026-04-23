@@ -48,7 +48,6 @@ def transcribe_and_send(request: dict):
 
     file_url     = request["file_url"]
     phone_number = request["phone_number"]
-    chat_id      = request.get("chat_id", "")
     content_type = request.get("content_type", "audio/mpeg")
     reply_from_number = request.get("reply_from_number", "")
     source       = request.get("source", "twilio")
@@ -78,21 +77,6 @@ def transcribe_and_send(request: dict):
             ExpressionAttributeValues=attr_values,
         )
 
-    def _send_telegram(text: str):
-        if not chat_id:
-            return
-        token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-        if not token:
-            return
-        try:
-            requests.post(
-                f"https://api.telegram.org/bot{token}/sendMessage",
-                json={"chat_id": chat_id, "text": text},
-                timeout=10,
-            )
-        except Exception as e:
-            print(f"Telegram send error: {e}")
-
     def _send_sms(text: str):
         account_sid = os.environ.get("TWILIO_ACCOUNT_SID", "")
         auth_token = os.environ.get("TWILIO_AUTH_TOKEN", "")
@@ -117,9 +101,6 @@ def transcribe_and_send(request: dict):
             print(f"Twilio send error: {e}")
 
     def _notify_user(text: str):
-        if source == "telegram":
-            _send_telegram(text)
-            return
         _send_sms(text)
 
     try:
@@ -146,11 +127,10 @@ def transcribe_and_send(request: dict):
         # Download audio
         print("Downloading audio...")
         request_kwargs = {"timeout": 300}
-        if source == "twilio":
-            request_kwargs["auth"] = (
-                os.environ.get("TWILIO_ACCOUNT_SID", ""),
-                os.environ.get("TWILIO_AUTH_TOKEN", ""),
-            )
+        request_kwargs["auth"] = (
+            os.environ.get("TWILIO_ACCOUNT_SID", ""),
+            os.environ.get("TWILIO_AUTH_TOKEN", ""),
+        )
 
         response = requests.get(file_url, **request_kwargs)
         response.raise_for_status()
