@@ -117,37 +117,6 @@ def cancel_user_plan(phone_number: str):
     )
 
 
-def link_telegram(phone_number: str, telegram_chat_id: str):
-    """Store Telegram chat ID on user record."""
-    _table(USERS_TABLE).update_item(
-        Key={"phone_number": phone_number},
-        UpdateExpression="SET telegram_chat_id = :cid, updated_at = :ts",
-        ExpressionAttributeValues={
-            ":cid": telegram_chat_id,
-            ":ts":  _now(),
-        },
-    )
-
-
-def get_phone_by_telegram(telegram_chat_id: str) -> Optional[str]:
-    """Look up phone number by Telegram chat ID."""
-    resp = _table(USERS_TABLE).scan(
-        FilterExpression="telegram_chat_id = :cid",
-        ExpressionAttributeValues={":cid": telegram_chat_id},
-        Limit=1,
-    )
-    items = resp.get("Items", [])
-    return items[0]["phone_number"] if items else None
-    """Scan for user by Stripe customer ID (used in webhook handler)."""
-    resp = _table(USERS_TABLE).scan(
-        FilterExpression="stripe_customer_id = :cid",
-        ExpressionAttributeValues={":cid": stripe_customer_id},
-        Limit=1,
-    )
-    items = resp.get("Items", [])
-    return items[0] if items else None
-
-
 # ─────────────────────────────────────────────────────────────────────────────
 # JOBS
 # ─────────────────────────────────────────────────────────────────────────────
