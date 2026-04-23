@@ -3,9 +3,9 @@ SMScribe — Twilio inbound SMS/MMS webhook
 POST /twilio/webhook
 
 Handles incoming messages from the production SMS number:
-  media message  -> check plan limits, trigger Modal transcription
-  HELP / STATUS  -> usage + plan help
-  anything else  -> prompt user to send an audio attachment
+  media message          -> check plan limits, trigger Modal transcription
+  HELP / STATUS / SUPPORT -> usage + plan help
+  anything else          -> prompt user to send an audio attachment
 """
 
 import os
@@ -48,11 +48,12 @@ def handler(event, context):
         return _handle_media(phone_number, user, params)
 
     command = body.upper()
-    if command in {"HELP", "STATUS"}:
+    if command in {"HELP", "STATUS", "SUPPORT"}:
         return _handle_help(phone_number, user)
 
     return _twiml_response(
-        "Send an audio file or voice memo as an attachment and we'll text back the transcript."
+        "Send an audio file or voice memo as an attachment and we'll text back the transcript. "
+        "Reply STATUS for plan details or support."
     )
 
 
@@ -133,7 +134,8 @@ def _handle_help(phone_number: str, user: dict):
         f"Usage: {usage_str}\n"
         f"Max file length: {limits['max_minutes']} min\n"
         f"Manage your plan: smscribe.com/account\n"
-        f"Support: support@smscribe.com"
+        f"Support: support@smscribe.com\n"
+        f"Tip: if HELP returns Twilio's carrier message, use STATUS instead."
     )
 
 

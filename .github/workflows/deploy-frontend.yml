@@ -61,6 +61,17 @@ jobs:
         if: steps.changes.outputs.frontend_changed == 'true'
         run: |
           aws s3 sync frontend/ s3://${{ secrets.S3_BUCKET_NAME }}
+          aws s3 cp frontend/ s3://${{ secrets.S3_BUCKET_NAME }} \
+            --recursive \
+            --exclude "*" \
+            --include "*.html" \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --metadata-directive REPLACE \
+            --content-type text/html
+          aws s3 cp frontend/smscribe.css s3://${{ secrets.S3_BUCKET_NAME }}/smscribe.css \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --metadata-directive REPLACE \
+            --content-type text/css
           echo "Frontend deployed"
 
       - name: Invalidate CloudFront cache
@@ -68,5 +79,5 @@ jobs:
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
+            --paths "/" "/index.html" "/account.html" "/terms.html" "/privacy-policy.html" "/smscribe.css"
           echo "CloudFront cache invalidated"

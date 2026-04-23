@@ -82,7 +82,7 @@ def _send_welcome_sms(phone_number: str):
         message_body = (
             "Welcome to SMScribe! Your number is all set up. "
             "Reply with an audio file or voice memo any time and we'll text back your transcript. "
-            "Reply HELP for support."
+            "Reply STATUS for plan info or support."
         )
 
         send_kwargs = {
