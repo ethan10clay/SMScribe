@@ -17,6 +17,46 @@ import db
 import security as sec
 
 MODAL_TRANSCRIBE_URL = os.environ.get("MODAL_TRANSCRIBE_URL", "")
+SUPPORTED_MEDIA_PREFIXES = (
+    "audio/",
+    "video/quicktime",
+    "video/mp4",
+    "video/3gpp",
+    "video/3gpp2",
+    "video/webm",
+    "application/octet-stream",
+)
+SUPPORTED_MEDIA_TYPES = {
+    "audio/3gpp",
+    "audio/3gpp2",
+    "audio/webm",
+    "audio/mp4",
+    "audio/x-m4a",
+    "audio/mpeg",
+    "audio/mp3",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/wave",
+    "audio/ogg",
+    "audio/oga",
+    "audio/amr",
+    "audio/aac",
+    "audio/x-hx-aac-adts",
+}
+SUPPORTED_EXTENSIONS = (
+    ".3gp",
+    ".3gpp",
+    ".3g2",
+    ".webm",
+    ".m4a",
+    ".mp4",
+    ".amr",
+    ".aac",
+    ".wav",
+    ".ogg",
+    ".oga",
+    ".mp3",
+)
 
 
 def handler(event, context):
@@ -70,12 +110,25 @@ def _handle_media(phone_number: str, user: dict, params: dict):
     media_url = (params.get("MediaUrl0") or "").strip()
     content_type = (params.get("MediaContentType0") or "").strip().lower()
     reply_from_number = (params.get("To") or "").strip()
+    message_sid = (params.get("MessageSid") or "").strip()
     if not media_url:
         return _twiml_response("We couldn't read your attachment. Please try again.")
 
-    if not _is_supported_audio(content_type, media_url):
+    media_decision = _classify_media(content_type, media_url)
+    print(
+        "Inbound media"
+        f" sid={message_sid or 'unknown'}"
+        f" from={_mask(phone_number)}"
+        f" num_media={params.get('NumMedia', '0')}"
+        f" content_type={content_type or 'unknown'}"
+        f" url_suffix={_url_suffix(media_url)}"
+        f" accepted={media_decision['accepted']}"
+        f" reason={media_decision['reason']}"
+    )
+
+    if not media_decision["accepted"]:
         return _twiml_response(
-            "Please send an audio attachment such as m4a, mp3, wav, ogg, or amr."
+            "Please send an audio attachment such as m4a, mp3, wav, ogg, amr, 3gp, or webm."
         )
 
     db.increment_usage(phone_number)
@@ -152,17 +205,38 @@ def _safe_int(value: str) -> int:
         return 0
 
 
-def _is_supported_audio(content_type: str, media_url: str) -> bool:
-    supported_types = (
-        "audio/",
-        "video/quicktime",
-        "application/octet-stream",
-    )
-    if any(content_type.startswith(prefix) for prefix in supported_types):
-        return True
+def _classify_media(content_type: str, media_url: str) -> dict:
+    lowered_type = (content_type or "").lower()
+    lowered_url = (media_url or "").lower()
 
-    lowered = media_url.lower()
-    return lowered.endswith((".m4a", ".mp3", ".wav", ".ogg", ".oga", ".amr", ".aac"))
+    if lowered_type.startswith(("image/", "text/")):
+        return {"accepted": False, "reason": "rejected_non_audio_type"}
+    if lowered_type in {
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    }:
+        return {"accepted": False, "reason": "rejected_document_type"}
+
+    if lowered_type in SUPPORTED_MEDIA_TYPES:
+        return {"accepted": True, "reason": "supported_exact_type"}
+    if any(lowered_type.startswith(prefix) for prefix in SUPPORTED_MEDIA_PREFIXES):
+        return {"accepted": True, "reason": "supported_prefix"}
+    if lowered_url.endswith(SUPPORTED_EXTENSIONS):
+        return {"accepted": True, "reason": "supported_extension"}
+
+    return {"accepted": False, "reason": "unsupported_media_type"}
+
+
+def _url_suffix(media_url: str) -> str:
+    tail = (media_url or "").split("/")[-1]
+    return tail[-32:] if tail else "unknown"
+
+
+def _mask(phone: str) -> str:
+    if len(phone) < 5:
+        return "***"
+    return phone[:3] + "***" + phone[-2:]
 
 
 def _twiml_response(message: str = "", status: int = 200) -> dict:
