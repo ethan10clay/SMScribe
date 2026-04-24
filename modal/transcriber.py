@@ -51,6 +51,7 @@ def transcribe_and_send(request: dict):
     content_type = request.get("content_type", "audio/mpeg")
     reply_from_number = request.get("reply_from_number", "")
     source       = request.get("source", "twilio")
+    temp_audio_path = None
 
     print(f"Starting transcription for {phone_number} via {source}")
 
@@ -138,7 +139,13 @@ def transcribe_and_send(request: dict):
         print(f"Downloaded {len(audio_data)} bytes")
 
         # Save temp file
-        extension = _get_extension(content_type)
+        extension = _get_extension(content_type, file_url)
+        print(
+            "Prepared temp audio file"
+            f" content_type={content_type or 'unknown'}"
+            f" extension=.{extension}"
+            f" url_suffix={_url_suffix(file_url)}"
+        )
         with tempfile.NamedTemporaryFile(suffix=f".{extension}", delete=False) as f:
             f.write(audio_data)
             temp_audio_path = f.name
@@ -180,6 +187,7 @@ def transcribe_and_send(request: dict):
         transcript = " ".join(transcript_parts).strip()
 
         os.unlink(temp_audio_path)
+        temp_audio_path = None
 
         if not transcript:
             _update_job("failed", error="No speech detected")
@@ -233,30 +241,61 @@ def transcribe_and_send(request: dict):
         }
 
     except Exception as e:
-        print(f"Transcription error: {e}")
+        print(
+            "Transcription error"
+            f" content_type={content_type or 'unknown'}"
+            f" error={e}"
+        )
         import traceback
         traceback.print_exc()
+        if temp_audio_path and os.path.exists(temp_audio_path):
+            os.unlink(temp_audio_path)
         try:
             _update_job("failed", error=str(e)[:500])
-            _notify_user(f"Sorry, transcription failed. Please try again. (Error: {str(e)[:100]})")
+            _notify_user(
+                "We received your recording, but your Samsung/Android device sent it in a format "
+                "we couldn't decode. Please try attaching the original audio file from the recorder app."
+            )
         except Exception:
             pass
         raise
 
 
-def _get_extension(content_type: str) -> str:
+def _get_extension(content_type: str, file_url: str = "") -> str:
+    lowered_type = (content_type or "").lower()
+    lowered_url = (file_url or "").lower()
     mapping = {
         "audio/mp4":   "m4a",
         "audio/x-m4a": "m4a",
         "audio/mpeg":  "mp3",
         "audio/mp3":   "mp3",
         "audio/wav":   "wav",
+        "audio/x-wav": "wav",
+        "audio/wave":  "wav",
         "audio/ogg":   "ogg",
+        "audio/oga":   "oga",
         "audio/amr":   "amr",
+        "audio/aac":   "aac",
+        "audio/3gpp":  "3gp",
+        "video/3gpp":  "3gp",
+        "audio/3gpp2": "3g2",
+        "video/3gpp2": "3g2",
+        "audio/webm":  "webm",
+        "video/webm":  "webm",
+        "video/mp4":   "mp4",
     }
     for key, ext in mapping.items():
-        if key in content_type:
+        if key in lowered_type:
             return ext
+
+    for ext in ("3gpp", "3gp", "3g2", "webm", "m4a", "mp4", "amr", "aac", "wav", "ogg", "oga", "mp3"):
+        if lowered_url.endswith(f".{ext}"):
+            return "3gp" if ext == "3gpp" else ext
+
+    if lowered_type.startswith("video/"):
+        return "mp4"
+    if lowered_type == "application/octet-stream":
+        return "mp4"
     return "m4a"
 
 
@@ -264,6 +303,11 @@ def _mask(phone: str) -> str:
     if len(phone) < 5:
         return "***"
     return phone[:3] + "***" + phone[-2:]
+
+
+def _url_suffix(file_url: str) -> str:
+    tail = (file_url or "").split("/")[-1]
+    return tail[-32:] if tail else "unknown"
 
 
 @app.local_entrypoint()
