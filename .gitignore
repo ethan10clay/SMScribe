@@ -1,1 +1,3 @@
 backend/setup/*
+__pycache__/
+*.py[cod]
