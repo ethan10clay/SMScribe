@@ -1,7 +1,7 @@
 """
 POST /stripe/checkout
 Headers: Authorization: Bearer <jwt>
-Body: { "plan": "student" | "pro", "interval": "month" | "year" }
+Body: { "plan": "student" | "pro", "interval": "month" }
 
 Creates a Stripe Checkout session and returns the URL.
 """
@@ -18,11 +18,9 @@ import security as sec
 PRICE_IDS = {
     "student": {
         "month": "STRIPE_STUDENT_MONTHLY_PRICE_ID",
-        "year":  "STRIPE_STUDENT_ANNUAL_PRICE_ID",
     },
     "pro": {
         "month": "STRIPE_PRO_MONTHLY_PRICE_ID",
-        "year":  "STRIPE_PRO_ANNUAL_PRICE_ID",
     },
 }
 
@@ -45,8 +43,8 @@ def handler(event, context):
 
     if plan not in ("student", "pro"):
         return sec.err("plan must be 'student' or 'pro'")
-    if interval not in ("month", "year"):
-        return sec.err("interval must be 'month' or 'year'")
+    if interval != "month":
+        return sec.err("interval must be 'month'")
 
     # Look up the Stripe Price ID from environment
     price_env_key = PRICE_IDS[plan][interval]
